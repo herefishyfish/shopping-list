@@ -56,7 +56,7 @@ export class ListPage {
     const list = this.list();
     if (!list) return;
     try {
-      await this.lists.addItem(list, item.name, item.quantity);
+      await this.lists.addItem(list, item.name, item.quantity, item.source);
     } catch (e) {
       this.ui.error('Could not add the item', e);
     }

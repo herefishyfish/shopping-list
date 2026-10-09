@@ -1,6 +1,7 @@
 // Must stay the first import – see ota.ts.
 import './ota';
-import { provideZonelessChangeDetection } from '@angular/core';
+import { ErrorHandler, provideZonelessChangeDetection } from '@angular/core';
+import { Application, DiscardedErrorEventData, Trace, UnhandledErrorEventData } from '@nativescript/core';
 import { bootstrapApplication, provideNativeScriptRouter, registerElement, runNativeScriptAngularApp } from '@nativescript/angular';
 import { installMasonKit } from '@triniwiz/nativescript-masonkit/angular';
 import { install as installBottomSheet } from '@nativescript-community/ui-material-bottomsheet';
@@ -15,6 +16,7 @@ import { AppComponent } from './app/app.component';
 import { LoadingComponent } from './app/loading.component';
 import { routes } from './app/app.routes';
 import { initFirebase } from './app/core/firebase';
+import { CrashlyticsErrorHandler, recordError } from './app/core/telemetry';
 
 // MasonKit must be installed before Angular bootstraps. It registers the HTML-shaped
 // elements (div, section, header, h1…h6, p, span, ul, li, …) plus MasonKit's own
@@ -37,13 +39,30 @@ registerElement('SvgView', () => Svg);
 
 installBottomSheet();
 
+// Error handling – https://docs.nativescript.org/guide/error-handling
+// Errors NativeScript core reports through Trace (bindings, navigation, …): log them in
+// development, send them to Crashlytics in production. Neither crashes the app.
+Trace.setErrorHandler({
+  handlerError(err) {
+    if (__DEV__) {
+      Trace.write(err, 'unhandled-error', Trace.messageType.error);
+    } else {
+      recordError(err, 'trace');
+    }
+  },
+});
+// Uncaught JS exceptions are discarded instead of rethrown to native
+// (`discardUncaughtJsExceptions` in nativescript.config.ts) and reported here.
+Application.on(Application.discardedErrorEvent, (args: DiscardedErrorEventData) => recordError(args.error, 'discarded'));
+Application.on(Application.uncaughtErrorEvent, (args: UnhandledErrorEventData) => recordError(args.error, 'uncaught'));
+
 runNativeScriptAngularApp({
   // Firebase init happens before the main app bootstraps; the loading app (same look as the
   // native splash) covers that gap and fades out when the main app is ready.
   appModuleBootstrap: async () => {
     await initFirebase();
     return bootstrapApplication(AppComponent, {
-      providers: [provideNativeScriptRouter(routes), provideZonelessChangeDetection()],
+      providers: [provideNativeScriptRouter(routes), provideZonelessChangeDetection(), { provide: ErrorHandler, useClass: CrashlyticsErrorHandler }],
     });
   },
   loadingModule: () => bootstrapApplication(LoadingComponent, { providers: [provideZonelessChangeDetection()] }),

@@ -1,5 +1,7 @@
+@use '../../../theme' as *;
+
 .sheet-root {
-  background-color: #ffffff;
+  background-color: c(surface);
 }
 
 .sheet {
@@ -44,12 +46,12 @@
   text-align: center;
   line-height: 36;
   font-weight: bold;
-  color: #ffffff;
-  background-color: #2e7d5b;
+  color: c(on-primary);
+  background-color: c(primary-fill);
 }
 
 .pending .avatar {
-  background-color: #b0b8b4;
+  background-color: c(disabled);
 }
 
 .tabs {
@@ -58,7 +60,7 @@
   gap: 4;
   padding: 4;
   border-radius: 12;
-  background-color: #eef1ef;
+  background-color: c(surface-muted);
 }
 
 .tab {
@@ -66,13 +68,13 @@
   padding: 8 12;
   border-radius: 9;
   font-size: 15;
-  color: #5f6b66;
+  color: c(muted);
   background-color: transparent;
 }
 
 .tab.active {
-  color: #1f5a41;
-  background-color: #ffffff;
+  color: c(on-primary-soft);
+  background-color: c(surface);
 }
 
 .qr-panel {
@@ -87,7 +89,8 @@
   padding: 12;
   border-radius: 16;
   border-width: 1;
-  border-color: #e3e6e4;
+  border-color: c(divider);
+  // Always white: QR codes need dark-on-light contrast to scan, even in dark mode.
   background-color: #ffffff;
 }
 

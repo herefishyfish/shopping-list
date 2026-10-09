@@ -6,6 +6,7 @@ import { HistoryService } from './history.service';
 import { ListItem, ShoppingList } from './models';
 import { JOIN_CODE_TTL_MS, JoinPayload, buildJoinPayload } from './qr';
 import { displayName, normalizeName } from './suggest';
+import { track } from './telemetry';
 
 type Unsubscribe = () => void;
 
@@ -88,6 +89,7 @@ export class ListsService {
       createdAt: now,
       updatedAt: now,
     });
+    track('list_created');
     return ref.id;
   }
 
@@ -109,6 +111,7 @@ export class ListsService {
   }
 
   setArchived(list: ShoppingList, archived: boolean) {
+    track('list_archived', { archived });
     return this.touch(list.id, { archived });
   }
 
@@ -124,11 +127,13 @@ export class ListsService {
     }
     await this.revokeJoinCodes(list);
     await listRef.delete();
+    track('list_deleted', { members: list.memberIds.length });
   }
 
   // ---------------------------------------------------------------- sharing
 
   invite(list: ShoppingList, email: string) {
+    track('share_invite_sent');
     return this.touch(list.id, { invitedEmails: FieldValue.arrayUnion([email.trim().toLowerCase()]) });
   }
 
@@ -144,10 +149,12 @@ export class ListsService {
   }
 
   leave(list: ShoppingList) {
+    track('list_left');
     return this.removeMember(list, this.auth.uid);
   }
 
   acceptInvite(list: ShoppingList) {
+    track('list_joined', { method: 'email' });
     const me = this.auth.user()!;
     const email = me.email.toLowerCase();
     return this.touch(list.id, {
@@ -172,6 +179,7 @@ export class ListsService {
     const expiresAt = now + JOIN_CODE_TTL_MS;
     const ref = db().collection('lists').doc(list.id).collection('joinCodes').doc();
     await ref.set({ createdBy: this.auth.uid, createdAt: now, expiresAt });
+    track('share_qr_shown');
     return { payload: buildJoinPayload({ listId: list.id, code: ref.id, name: list.name }), expiresAt };
   }
 
@@ -183,6 +191,7 @@ export class ListsService {
       codes.docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
       await batch.commit();
     }
+    track('join_codes_revoked', { count: codes.docs.length });
     return codes.docs.length;
   }
 
@@ -190,13 +199,14 @@ export class ListsService {
    * Adds the current user to a list using a scanned join code. The security rules check the
    * code exists under the list and hasn't expired; we can't read the list until this succeeds.
    */
-  joinWithCode(join: JoinPayload) {
+  async joinWithCode(join: JoinPayload) {
     const me = this.auth.user()!;
-    return this.touch(join.listId, {
+    await this.touch(join.listId, {
       memberIds: FieldValue.arrayUnion([me.uid]),
       [`members.${me.uid}`]: { name: me.displayName, email: me.email.toLowerCase() },
       joinCode: join.code,
     });
+    track('list_joined', { method: 'qr' });
   }
 
   // ---------------------------------------------------------------- items
@@ -217,7 +227,7 @@ export class ListsService {
       );
   }
 
-  async addItem(list: ShoppingList, rawName: string, quantity = '') {
+  async addItem(list: ShoppingList, rawName: string, quantity = '', source: 'typed' | 'suggestion' | 'buy_again' = 'typed') {
     const name = displayName(rawName);
     if (!name) return;
     const me = this.auth.user()!;
@@ -235,6 +245,7 @@ export class ListsService {
     });
     batch.update(listRef, { itemCount: FieldValue.increment(1), updatedAt: Date.now() });
     await batch.commit();
+    track('item_added', { source, shared: list.memberIds.length > 1 });
     // History is best-effort; never block adding the item on it.
     this.history.record(name).catch((e) => console.warn('[history] record failed', e));
   }
@@ -246,6 +257,7 @@ export class ListsService {
     batch.update(listRef.collection('items').doc(item.id), { checked, checkedAt: checked ? Date.now() : null });
     batch.update(listRef, { doneCount: FieldValue.increment(checked ? 1 : -1), updatedAt: Date.now() });
     await batch.commit();
+    if (checked) track('item_checked', { shared: list.memberIds.length > 1 });
     // Ticking off something a housemate added still teaches *your* type-ahead about it.
     if (checked && item.addedBy !== this.auth.uid) {
       this.history.record(item.name).catch(() => {});
@@ -285,6 +297,7 @@ export class ListsService {
   async clearChecked(list: ShoppingList, items: ListItem[]) {
     const done = items.filter((i) => i.checked);
     if (!done.length) return;
+    track('items_cleared', { count: done.length });
     const listRef = db().collection('lists').doc(list.id);
     for (let i = 0; i < done.length; i += 450) {
       const chunk = done.slice(i, i + 450);

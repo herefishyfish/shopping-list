@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Dark-mode palette. Android picks these automatically when the system is in dark mode
+     (the app theme is Theme.MaterialComponents.DayNight). Keep in sync with src/theme.scss. -->
+<resources>
+    <color name="ns_primary">#1B3A2D</color>
+    <color name="ns_primaryDark">#10241B</color>
+    <color name="ns_accent">#6FCF9F</color>
+
+    <color name="app_background">#121614</color>
+    <color name="app_surface">#1D2320</color>
+    <color name="app_text">#E6EBE8</color>
+    <color name="app_on_accent">#0E1F17</color>
+    <color name="splash_background">#16261E</color>
+</resources>

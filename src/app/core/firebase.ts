@@ -3,6 +3,7 @@ import '@nativescript/firebase-auth';
 import '@nativescript/firebase-firestore';
 import { GoogleSignin } from '@nativescript/google-signin';
 import { environment } from '../../environments/environment';
+import { initTelemetry } from './telemetry';
 
 let ready: Promise<void> | undefined;
 
@@ -10,6 +11,7 @@ let ready: Promise<void> | undefined;
 export function initFirebase(): Promise<void> {
   ready ??= (async () => {
     await firebase().initializeApp();
+    initTelemetry();
     // Firestore offline persistence is on by default on native, so lists and the
     // item-history type-ahead keep working on a flaky in-store connection.
     await GoogleSignin.configure({ serverClientId: environment.googleServerClientId });

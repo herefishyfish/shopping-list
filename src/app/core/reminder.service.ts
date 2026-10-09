@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { ApplicationSettings } from '@nativescript/core';
 import { LocalNotifications } from '@nativescript/local-notifications';
+import { track } from './telemetry';
 import { DEFAULT_REMINDER, ReminderSettings, nextReminder, normalizeReminder } from './reminder-time';
 
 const STORAGE_KEY = 'shoppingReminder';
@@ -30,6 +31,7 @@ export class ReminderService {
     const next = normalizeReminder({ ...this._settings(), ...patch });
     this._settings.set(next);
     ApplicationSettings.setString(STORAGE_KEY, JSON.stringify(next));
+    track('reminder_updated', { enabled: next.enabled, weekday: next.weekday, hour: next.hour, zone: next.zone });
     return this.apply();
   }
 

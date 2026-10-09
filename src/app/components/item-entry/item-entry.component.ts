@@ -7,6 +7,8 @@ import { rankSuggestions } from '../../core/suggest';
 export interface NewItem {
   name: string;
   quantity: string;
+  /** How it was entered – for analytics on whether the type-ahead earns its keep. */
+  source: 'typed' | 'suggestion' | 'buy_again';
 }
 
 /**
@@ -35,15 +37,15 @@ export class ItemEntryComponent {
   submit() {
     const name = this.query().trim();
     if (!name) return;
-    this.emit(name);
+    this.emit(name, 'typed');
   }
 
   pick(entry: HistoryEntry) {
-    this.emit(entry.name);
+    this.emit(entry.name, this.query().trim() ? 'suggestion' : 'buy_again');
   }
 
-  private emit(name: string) {
-    this.added.emit({ name, quantity: this.qty() });
+  private emit(name: string, source: NewItem['source']) {
+    this.added.emit({ name, quantity: this.qty(), source });
     this.query.set('');
     this.qty.set('');
   }

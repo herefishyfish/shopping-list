@@ -1,3 +1,5 @@
+@use '../../../theme' as *;
+
 .row {
   flex-direction: row;
   align-items: center;
@@ -20,13 +22,13 @@
   border-radius: 16;
   font-size: 14;
   font-weight: normal;
-  color: #1f5a41;
-  background-color: #eef1ef;
+  color: c(on-primary-soft);
+  background-color: c(surface-muted);
 }
 
 .chip.active {
-  color: #ffffff;
-  background-color: #2e7d5b;
+  color: c(on-primary);
+  background-color: c(primary-fill);
 }
 
 .time {

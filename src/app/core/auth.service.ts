@@ -3,6 +3,7 @@ import { GoogleAuthProvider, User } from '@nativescript/firebase-auth';
 import { GoogleSignin } from '@nativescript/google-signin';
 import { MERGE, auth, db } from './firebase';
 import { AppUser } from './models';
+import { setTelemetryUser, track } from './telemetry';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
     const apply = (u: User | null) => {
       const appUser = u ? toAppUser(u) : null;
       this._user.set(appUser);
+      setTelemetryUser(appUser?.uid ?? null);
       resolve(appUser);
     };
     const current = auth().currentUser;
@@ -43,11 +45,13 @@ export class AuthService {
     const gUser = await GoogleSignin.signIn();
     const credential = GoogleAuthProvider.credential(gUser.idToken, gUser.accessToken);
     const { user } = await auth().signInWithCredential(credential);
+    track('login', { method: 'google' });
     return this.finishSignIn(user);
   }
 
   async signInWithEmail(email: string, password: string): Promise<AppUser> {
     const { user } = await auth().signInWithEmailAndPassword(email.trim(), password);
+    track('login', { method: 'password' });
     return this.finishSignIn(user);
   }
 
@@ -56,6 +60,7 @@ export class AuthService {
     if (name.trim()) {
       await user.updateProfile({ displayName: name.trim() });
     }
+    track('sign_up', { method: 'password' });
     return this.finishSignIn(user, name.trim());
   }
 

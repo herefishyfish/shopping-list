@@ -1,7 +1,8 @@
-import { Component, NO_ERRORS_SCHEMA, computed, inject } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, computed, inject, signal } from '@angular/core';
 import { ReminderService } from '../../core/reminder.service';
 import { ReminderSettings, ReminderZone, WEEKDAYS, describeReminder } from '../../core/reminder-time';
 import { UiService } from '../../core/ui.service';
+import { setTelemetryOptIn, telemetryOptIn } from '../../core/telemetry';
 
 @Component({
   selector: 'settings-page',
@@ -14,12 +15,19 @@ export class SettingsPage {
   private readonly ui = inject(UiService);
 
   readonly s = this.reminders.settings;
+  readonly telemetry = signal(telemetryOptIn());
   readonly days = WEEKDAYS.map((name, i) => ({ i, short: name.slice(0, 3) }));
   readonly summary = computed(() => describeReminder(this.s()));
   readonly nextLabel = computed(() => {
     const at = this.reminders.next();
     return at ? at.toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : '';
   });
+
+  setTelemetry(enabled: boolean) {
+    if (enabled === this.telemetry()) return;
+    this.telemetry.set(enabled);
+    setTelemetryOptIn(enabled);
+  }
 
   setEnabled(enabled: boolean) {
     if (enabled !== this.s().enabled) this.save({ enabled });

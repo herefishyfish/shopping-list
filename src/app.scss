@@ -1,19 +1,22 @@
 // Global styles. MasonKit's HTML-shaped elements are styled by tag name, just like the web.
 // Lengths are unitless (= dip, which matches a CSS pixel in a browser).
+// Colours come from the light/dark palette in theme.scss.
+@use 'theme' as *;
 
-$primary: #2e7d5b;
-$primary-dark: #1f5a41;
-$bg: #f6f7f5;
-$text: #1c2420;
-$muted: #5f6b66;
-$danger: #b3261e;
+.ns-light {
+  @include palette($light);
+}
+
+.ns-dark {
+  @include palette($dark);
+}
 
 Page {
-  background-color: $bg;
+  background-color: c(bg);
 }
 
 .action-bar {
-  background-color: $primary;
+  background-color: c(action-bar);
   color: #ffffff;
 }
 
@@ -24,8 +27,8 @@ Page {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background-color: $bg;
-  color: $text;
+  background-color: c(bg);
+  color: c(text);
 }
 
 .scroll {
@@ -53,20 +56,20 @@ Page {
 
 // ---------------------------------------------------------------- typography
 
-h1 { font-size: 28; font-weight: bold; color: $text; }
-h2 { font-size: 22; font-weight: bold; color: $text; }
-h3 { font-size: 18; font-weight: bold; color: $text; }
-h4 { font-size: 16; font-weight: bold; color: $text; }
-p { font-size: 15; line-height: 1.4; color: $text; }
+h1 { font-size: 28; font-weight: bold; color: c(text); }
+h2 { font-size: 22; font-weight: bold; color: c(text); }
+h3 { font-size: 18; font-weight: bold; color: c(text); }
+h4 { font-size: 16; font-weight: bold; color: c(text); }
+p { font-size: 15; line-height: 1.4; color: c(text); }
 
-.muted { color: $muted; font-size: 14; }
+.muted { color: c(muted); font-size: 14; }
 .small { font-size: 12; }
-.error { color: $danger; font-size: 14; }
+.error { color: c(danger); font-size: 14; }
 
 .section-title {
   font-size: 13;
   font-weight: bold;
-  color: $muted;
+  color: c(muted);
   text-transform: uppercase;
   margin-top: 8;
 }
@@ -78,7 +81,7 @@ p { font-size: 15; line-height: 1.4; color: $text; }
   flex-direction: column;
   padding: 14 16;
   border-radius: 14;
-  background-color: #ffffff;
+  background-color: c(surface);
 }
 
 // ---------------------------------------------------------------- controls (MasonKit <input>/<button>)
@@ -87,10 +90,10 @@ input {
   padding: 10 12;
   font-size: 16;
   border-width: 1;
-  border-color: #d5dbd8;
+  border-color: c(border);
   border-radius: 10;
-  background-color: #ffffff;
-  color: $text;
+  background-color: c(surface);
+  color: c(text);
 }
 
 button,
@@ -100,22 +103,22 @@ button,
   font-size: 16;
   font-weight: bold;
   text-align: center;
-  color: $primary;
+  color: c(primary);
   background-color: transparent;
 }
 
 .btn.primary {
-  color: #ffffff;
-  background-color: $primary;
+  color: c(on-primary);
+  background-color: c(primary-fill);
 }
 
 .btn.ghost {
-  color: $primary-dark;
-  background-color: #e3f1ea;
+  color: c(on-primary-soft);
+  background-color: c(primary-soft);
 }
 
 .btn.link {
-  color: $primary;
+  color: c(primary);
   font-weight: normal;
   background-color: transparent;
 }

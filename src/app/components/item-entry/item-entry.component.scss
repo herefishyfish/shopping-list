@@ -1,11 +1,13 @@
+@use '../../../theme' as *;
+
 .entry {
   display: flex;
   flex-direction: column;
   gap: 8;
   padding: 12 16;
-  background-color: #ffffff;
+  background-color: c(surface);
   border-bottom-width: 1;
-  border-color: #e3e6e4;
+  border-color: c(divider);
 }
 
 .entry-row {
@@ -25,7 +27,7 @@
 
 .hint {
   font-size: 12;
-  color: #8a948f;
+  color: c(subtle);
   text-transform: uppercase;
   letter-spacing: 0.05;
 }
@@ -43,7 +45,7 @@
   align-items: center;
   padding: 10 8;
   border-radius: 8;
-  background-color: #f3f6f4;
+  background-color: c(surface-muted);
 }
 
 .suggestion-name {
@@ -52,7 +54,7 @@
 
 .suggestion-count {
   font-size: 12;
-  color: #8a948f;
+  color: c(subtle);
 }
 
 .buy-again {
@@ -72,6 +74,6 @@
   padding: 6 12;
   border-radius: 16;
   font-size: 14;
-  background-color: #e3f1ea;
-  color: #1f5a41;
+  background-color: c(primary-soft);
+  color: c(on-primary-soft);
 }

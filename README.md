@@ -24,6 +24,16 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
   the phone's own), or turn it off.
 - **SVG icons:** `src/assets/icons/*.svg`, rendered with `<SvgView>` (`@nativescript/canvas-svg`)
   and coloured through CSS `color` (`currentColor`).
+- **Dark mode:** Android follows the system theme through resources
+  (`Theme.MaterialComponents.DayNight` + `values-night/colors.xml`), so dialogs, snackbars,
+  pickers, status bar and splash all switch. The app's own screens use the light/dark palette in
+  `src/theme.scss` (CSS variables on NativeScript's `.ns-light` / `.ns-dark` classes).
+- **Crashlytics & Analytics:** non-fatal and uncaught JS errors, screen views and a few
+  product events (no names, emails or list contents). Off in dev builds, and users can opt out
+  under Settings. Error handling follows the
+  [NativeScript guide](https://docs.nativescript.org/guide/error-handling):
+  `Trace.setErrorHandler`, plus `discardUncaughtJsExceptions` so JS errors are reported instead of
+  crashing the app.
 - **Fast start:** a `loadingModule` (same look as the native splash) is shown while Firebase
   initialises and the main app bootstraps, then fades out.
 - **OTA updates:** [Norrix](https://norrix.net) (`@norrix/client-sdk` 3). Updates download in
@@ -70,6 +80,8 @@ src/
       qr-code/                    <qr-code [value]> rendered as SVG
       scanner/                    ML Kit scanner modal + ScannerService.scan()
   ota.ts                          Norrix OTA init (first import in main.ts)
+  theme.scss                      light/dark colour palette (mirror of values-night)
+  app/core/telemetry.ts           Analytics events, Crashlytics, Angular ErrorHandler
   app/loading.component.ts        loading screen shown while the app boots
 resources/icon*.svg               app icon sources → `npm run icons`
 tools/generate-icons.mjs          renders the icon / splash PNGs for iOS and Android

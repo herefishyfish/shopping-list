@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { NativeScriptLoadingService } from '@nativescript/angular';
 import { CoreTypes, GridLayout, Image, EventData } from '@nativescript/core';
 import { filter, take } from 'rxjs/operators';
@@ -18,11 +18,18 @@ import { filter, take } from 'rxjs/operators';
   `,
   styles: [
     `
+      /* Matches the native splash: @color/splash_background (values / values-night). */
       .loading {
         background-color: #2e7d5b;
       }
+      .ns-dark .loading,
+      .ns-dark.loading {
+        background-color: #16261e;
+      }
     `,
   ],
+  // Unscoped so `.ns-dark` (on the root view, outside this component) can match.
+  encapsulation: ViewEncapsulation.None,
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class LoadingComponent implements OnInit, OnDestroy {

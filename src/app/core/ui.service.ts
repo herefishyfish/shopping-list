@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Dialogs, Utils } from '@nativescript/core';
 import { DismissReasons, SnackBar, SnackBarAction } from '@nativescript-community/ui-material-snackbar';
 import { LoadingIndicator, Mode } from '@nstudio/nativescript-loading-indicator';
+import { recordError } from './telemetry';
 
 /** Thin wrappers around the native feedback widgets so pages stay declarative. */
 @Injectable({ providedIn: 'root' })
@@ -14,7 +15,10 @@ export class UiService {
   }
 
   error(message: string, err?: unknown) {
-    if (err) console.error(message, err);
+    if (err) {
+      console.error(message, err);
+      recordError(err, message);
+    }
     return this.snackbar.simple(message, '#ffffff', '#B3261E').catch(() => {});
   }
 

@@ -2,7 +2,7 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- theme to use FOR launch screen-->
-    <style name="LaunchScreenThemeBase" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="LaunchScreenThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="toolbarStyle">@style/NativeScriptToolbarStyle</item>
 
         <item name="colorPrimary">@color/ns_primary</item>
@@ -19,12 +19,23 @@
     </style>
 
     <!-- theme to use AFTER launch screen is loaded-->
-    <style name="AppThemeBase" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="AppThemeBase" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="toolbarStyle">@style/NativeScriptToolbarStyle</item>
 
         <item name="colorPrimary">@color/ns_primary</item>
         <item name="colorPrimaryDark">@color/ns_primaryDark</item>
         <item name="colorAccent">@color/ns_accent</item>
+
+        <!-- Material components (switches, checkboxes, snackbars, bottom sheets, dialogs)
+             pick these up; values-night/colors.xml swaps them for dark mode. -->
+        <item name="colorSecondary">@color/ns_accent</item>
+        <item name="colorOnSecondary">@color/app_on_accent</item>
+        <item name="colorSurface">@color/app_surface</item>
+        <item name="colorOnSurface">@color/app_text</item>
+        <item name="android:colorBackground">@color/app_background</item>
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="android:navigationBarColor">@color/app_background</item>
+        <item name="android:textColorPrimary">@color/app_text</item>
     </style>
 
     <style name="AppTheme" parent="AppThemeBase">
@@ -34,7 +45,7 @@
     <style name="NativeScriptToolbarStyleBase" parent="Widget.AppCompat.Toolbar">
         <item name="android:background">@color/ns_primary</item>
         <item name="theme">@style/ThemeOverlay.AppCompat.ActionBar</item>
-        <item name="popupTheme">@style/ThemeOverlay.AppCompat</item>
+        <item name="popupTheme">@style/ThemeOverlay.AppCompat.DayNight</item>
     </style>
 
     <style name="NativeScriptToolbarStyle" parent="NativeScriptToolbarStyleBase">

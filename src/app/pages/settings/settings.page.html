@@ -1,4 +1,4 @@
-<ActionBar title="Reminders" class="action-bar">
+<ActionBar title="Settings" class="action-bar">
   <NavigationButton android.systemIcon="ic_menu_back" text="Lists"></NavigationButton>
 </ActionBar>
 
@@ -36,5 +36,13 @@
     }
 
     <p class="muted small center">Reminders are set per phone, so everyone sharing a list can pick their own.</p>
+
+    <section class="card row">
+      <div class="grow">
+        <h4>Usage stats &amp; crash reports</h4>
+        <span class="muted">Anonymous – helps fix bugs. Never includes your lists or email.</span>
+      </div>
+      <Switch [checked]="telemetry()" (checkedChange)="setTelemetry($any($event).value)"></Switch>
+    </section>
   </main>
 </div>

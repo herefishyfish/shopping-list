@@ -1,0 +1,67 @@
+// App colour palette, light and dark.
+//
+// Stylesheets use `c(name)`, which compiles to `var(--name, <light value>)`. The variables are
+// set on NativeScript's system classes (`.ns-light` / `.ns-dark`), which it adds to the root view
+// and to every modal / bottom-sheet root, so all screens follow the system appearance.
+// Android's own widgets (dialogs, snackbars, pickers, status bar) follow
+// App_Resources/Android/src/main/res/values-night – keep the two in sync.
+@use 'sass:map';
+
+$light: (
+  bg: #f6f7f5,
+  surface: #ffffff,
+  surface-muted: #eef1ef,
+  text: #1c2420,
+  muted: #5f6b66,
+  subtle: #8a948f,
+  faint: #9aa59f,
+  disabled: #b0b8b4,
+  border: #d5dbd8,
+  divider: #e3e6e4,
+  primary: #2e7d5b,
+  primary-fill: #2e7d5b,
+  on-primary: #ffffff,
+  primary-soft: #e3f1ea,
+  on-primary-soft: #1f5a41,
+  danger: #b3261e,
+  banner-bg: #fff4d6,
+  banner-text: #6b5200,
+  action-bar: #2e7d5b,
+  splash: #2e7d5b,
+);
+
+$dark: (
+  bg: #121614,
+  surface: #1d2320,
+  surface-muted: #252c28,
+  text: #e6ebe8,
+  muted: #a3aea8,
+  subtle: #7f8a85,
+  faint: #6e7a74,
+  disabled: #56615c,
+  border: #36403b,
+  divider: #2a322e,
+  primary: #6fcf9f,
+  primary-fill: #2e7d5b,
+  on-primary: #ffffff,
+  primary-soft: #1f3b2e,
+  on-primary-soft: #9fe0be,
+  danger: #f2b8b5,
+  banner-bg: #3a3220,
+  banner-text: #f2d88a,
+  action-bar: #1b3a2d,
+  splash: #16261e,
+);
+
+@function c($name) {
+  @if not map.has-key($light, $name) {
+    @error 'Unknown colour token: #{$name}';
+  }
+  @return var(--#{$name}, map.get($light, $name));
+}
+
+@mixin palette($map) {
+  @each $name, $value in $map {
+    --#{$name}: #{$value};
+  }
+}
