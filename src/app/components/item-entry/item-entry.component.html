@@ -1,7 +1,7 @@
 <section class="entry">
   <div class="entry-row">
-    <input class="entry-name" type="text" placeholder="Add an item…" [value]="query()" (input)="query.set($event.target.value)" />
-    <input class="entry-qty" type="text" placeholder="Qty" [value]="qty()" (input)="qty.set($event.target.value)" />
+    <div class="field entry-name"><TextField class="input" hint="Add an item…" [text]="query()" (textChange)="query.set($any($event).value)" autocapitalizationType="sentences" returnKeyType="done" (returnPress)="submit()"></TextField></div>
+    <div class="field entry-qty"><TextField class="input" hint="Qty" [text]="qty()" (textChange)="qty.set($any($event).value)" autocorrect="false" returnKeyType="done" (returnPress)="submit()"></TextField></div>
     <button class="btn primary" (tap)="submit()">Add</button>
   </div>
 

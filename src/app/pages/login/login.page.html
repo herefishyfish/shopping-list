@@ -13,10 +13,10 @@
     </div>
 
     @if (mode() === 'register') {
-      <input type="text" placeholder="Your name" [value]="name()" (input)="name.set($event.target.value)" />
+      <div class="field"><TextField class="input" hint="Your name" [text]="name()" (textChange)="name.set($any($event).value)" autocapitalizationType="words" autocorrect="false"></TextField></div>
     }
-    <input type="email" placeholder="Email" [value]="email()" (input)="email.set($event.target.value)" />
-    <input type="password" placeholder="Password" [value]="password()" (input)="password.set($event.target.value)" />
+    <div class="field"><TextField class="input" hint="Email" [text]="email()" (textChange)="email.set($any($event).value)" keyboardType="email" autocapitalizationType="none" autocorrect="false"></TextField></div>
+    <div class="field"><TextField class="input" hint="Password" [text]="password()" (textChange)="password.set($any($event).value)" secure="true" autocapitalizationType="none" autocorrect="false" returnKeyType="done" (returnPress)="submitEmail()"></TextField></div>
 
     @if (error()) {
       <p class="error">{{ error() }}</p>

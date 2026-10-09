@@ -84,9 +84,17 @@ p { font-size: 15; line-height: 1.4; color: c(text); }
   background-color: c(surface);
 }
 
-// ---------------------------------------------------------------- controls (MasonKit <input>/<button>)
+// ---------------------------------------------------------------- controls
+// Text entry uses core <TextField class="input"> (native EditText / UITextField), wrapped in a
+// MasonKit `.field` box so it takes part in flex layout. Buttons are MasonKit <button>s.
 
-input {
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+TextField.input {
+  placeholder-color: c(subtle);
   padding: 10 12;
   font-size: 16;
   border-width: 1;

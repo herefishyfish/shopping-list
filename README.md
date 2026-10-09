@@ -2,10 +2,10 @@
 
 A NativeScript + Angular app for shopping lists you share with your partner or housemates.
 
-- **UI:** [`@triniwiz/nativescript-masonkit`](https://www.npmjs.com/package/@triniwiz/nativescript-masonkit) `1.0.0-beta.108` (latest beta). Templates use
+- **UI:** [`@triniwiz/nativescript-masonkit`](https://www.npmjs.com/package/@triniwiz/nativescript-masonkit) `1.0.0-beta.108`. Templates use
   ordinary web markup - `div`, `main`, `section`, `article`, `header`, `footer`, `h1`-`h4`, `p`, `span`
-  - laid out with real flexbox CSS. MasonKit's Angular integration also takes over `<button>` and
-  `<input>` (there is no `nbutton`; the plain tag names now resolve to MasonKit's native widgets).
+  - laid out with real flexbox CSS. MasonKit's Angular integration also takes over `<button>`;
+  text fields are core `TextField`s.
   Core NativeScript is only used where there's no web equivalent: `ActionBar`, the `CheckBox`
   from `@nativescript-community/ui-checkbox`, and the native `GoogleSignInButton`.
 - **Auth:** Firebase Auth with **Google Sign-In** (`@nativescript/google-signin`) plus email/password
@@ -207,8 +207,9 @@ cd rules-tests && npm install && npm test   # firestore.rules against the emulat
   is `ActionBar` + content). Other components such as `<item-entry>` become real MasonKit boxes, so they
   can be styled from the outside like on the web.
 - Use unitless lengths (`padding: 12`). In NativeScript, `px` means physical pixels.
-- MasonKit's `<input>` emits DOM-style `input`/`change` events, so binding looks like the web:
-  `[value]="query()" (input)="query.set($event.target.value)"`.
+- Text entry uses core `<TextField class="input">` (native EditText / UITextField) rather than
+  MasonKit's `<input>`, wrapped in a `<div class="field">` so it takes part in flex layout:
+  `[text]="query()" (textChange)="query.set($any($event).value)" (returnPress)="submit()"`.
 - `<svg>` in any letter case is put in Angular's SVG namespace, so the native SVG view is
   registered as `<SvgView>`.
 - MasonKit is a beta. If a release changes element names or events, check

@@ -26,7 +26,7 @@
     }
 
     <section class="new-list card">
-      <input class="grow" type="text" placeholder="New list, e.g. Weekly shop" [value]="newName()" (input)="newName.set($event.target.value)" />
+      <div class="field grow"><TextField class="input" hint="New list, e.g. Weekly shop" [text]="newName()" (textChange)="newName.set($any($event).value)" autocapitalizationType="sentences" returnKeyType="done" (returnPress)="create()"></TextField></div>
       <button class="btn primary" (tap)="create()">Create</button>
     </section>
 
