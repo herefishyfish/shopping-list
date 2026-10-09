@@ -37,6 +37,12 @@ Page {
   gap: 12;
 }
 
+// Inline SVG icons (<SvgView>) inherit `color` as currentColor.
+.icon-sm {
+  width: 20;
+  height: 20;
+}
+
 .grow {
   flex: 1;
 }

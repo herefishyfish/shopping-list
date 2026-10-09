@@ -146,3 +146,52 @@ test('profiles are readable by signed-in users, writable by their owner', async 
   await assertSucceeds(getDoc(doc(as(BOB), 'users/alice')));
   await assertFails(setDoc(doc(as(BOB), 'users/alice'), { displayName: 'Mallory' }));
 });
+
+// ---------------------------------------------------------------- QR-code join codes
+
+const joinAs = (u, code) =>
+  updateDoc(doc(as(u), 'lists/l1'), {
+    memberIds: arrayUnion(u.uid),
+    [`members.${u.uid}`]: { name: u.uid, email: u.email.toLowerCase() },
+    joinCode: code,
+    updatedAt: 9,
+  });
+
+async function seedCode(code, expiresAt) {
+  await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), `lists/l1/joinCodes/${code}`), { createdBy: 'alice', createdAt: 1, expiresAt }));
+}
+
+test('members can create, read and revoke join codes; others cannot', async () => {
+  const now = Date.now();
+  await assertSucceeds(setDoc(doc(as(ALICE), 'lists/l1/joinCodes/c1'), { createdBy: 'alice', createdAt: now, expiresAt: now + 86400000 }));
+  await assertSucceeds(getDocs(collection(as(ALICE), 'lists/l1/joinCodes')));
+  await assertFails(setDoc(doc(as(ALICE), 'lists/l1/joinCodes/c2'), { createdBy: 'alice', createdAt: now, expiresAt: now + 30 * 86400000 }));
+  await assertFails(setDoc(doc(as(ALICE), 'lists/l1/joinCodes/c3'), { createdBy: 'bob', createdAt: now, expiresAt: now + 1000 }));
+  await assertFails(setDoc(doc(as(EVE), 'lists/l1/joinCodes/c4'), { createdBy: 'eve', createdAt: now, expiresAt: now + 1000 }));
+  await assertFails(getDoc(doc(as(EVE), 'lists/l1/joinCodes/c1')));
+  await assertFails(getDocs(collection(as(EVE), 'lists/l1/joinCodes')));
+  await assertFails(deleteDoc(doc(as(EVE), 'lists/l1/joinCodes/c1')));
+  await assertSucceeds(deleteDoc(doc(as(ALICE), 'lists/l1/joinCodes/c1')));
+});
+
+test('a valid join code lets someone add themselves', async () => {
+  await seedCode('good', Date.now() + 60000);
+  await assertSucceeds(joinAs(EVE, 'good'));
+  await assertSucceeds(getDoc(doc(as(EVE), 'lists/l1/items/i1')));
+});
+
+test('unknown or expired join codes are rejected', async () => {
+  await seedCode('old', Date.now() - 1000);
+  await assertFails(joinAs(EVE, 'old'));
+  await assertFails(joinAs(EVE, 'guessed'));
+  await assertFails(updateDoc(doc(as(EVE), 'lists/l1'), { memberIds: arrayUnion('eve'), 'members.eve': { name: 'e', email: 'e' } }));
+});
+
+test('a join code cannot be used to add others or change the list', async () => {
+  await seedCode('good', Date.now() + 60000);
+  const db = as(EVE);
+  await assertFails(updateDoc(doc(db, 'lists/l1'), { memberIds: arrayUnion('eve', 'mallory'), 'members.eve': { name: 'e', email: 'e' }, joinCode: 'good' }));
+  await assertFails(updateDoc(doc(db, 'lists/l1'), { memberIds: arrayUnion('eve'), 'members.eve': { name: 'e', email: 'e' }, joinCode: 'good', name: 'Mine now' }));
+  await assertFails(updateDoc(doc(db, 'lists/l1'), { memberIds: ['eve'], 'members.eve': { name: 'e', email: 'e' }, joinCode: 'good' }));
+  await assertFails(updateDoc(doc(db, 'lists/l1'), { memberIds: arrayUnion('eve'), 'members.alice': { name: 'x', email: 'x' }, joinCode: 'good' }));
+});

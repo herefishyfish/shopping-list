@@ -1,4 +1,6 @@
 <ActionBar title="Shopping lists" class="action-bar">
+  <ActionItem text="Scan" ios.position="right" android.position="actionBar" (tap)="scan()"></ActionItem>
+  <ActionItem text="Reminders" android.position="popup" ios.position="right" (tap)="settings()"></ActionItem>
   <ActionItem text="About" android.position="popup" ios.position="right" (tap)="about()"></ActionItem>
   <ActionItem text="Sign out" android.position="popup" ios.position="right" (tap)="signOut()"></ActionItem>
 </ActionBar>
@@ -32,8 +34,12 @@
       <p class="muted center">Loading your lists…</p>
     } @else if (!active().length) {
       <section class="empty">
-        <span class="empty-icon">📝</span>
-        <p class="muted center">No lists yet. Create one above, then share it with your partner or housemates.</p>
+        <SvgView class="empty-icon" src="~/assets/icons/list.svg"></SvgView>
+        <p class="muted center">No lists yet. Create one above and share it with your partner or housemates, or scan the QR code on their phone to join theirs.</p>
+        <div class="btn ghost scan-btn" (tap)="scan()">
+          <SvgView class="icon-sm" src="~/assets/icons/scan.svg"></SvgView>
+          <span>Scan a QR code to join</span>
+        </div>
       </section>
     }
 

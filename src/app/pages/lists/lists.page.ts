@@ -5,6 +5,9 @@ import { AuthService } from '../../core/auth.service';
 import { ListsService } from '../../core/lists.service';
 import { ShoppingList } from '../../core/models';
 import { UiService } from '../../core/ui.service';
+import { parseJoinPayload } from '../../core/qr';
+import { ScannerService } from '../../components/scanner/scanner.service';
+import { ReminderService } from '../../core/reminder.service';
 
 @Component({
   selector: 'lists-page',
@@ -17,6 +20,8 @@ export class ListsPage {
   private readonly lists = inject(ListsService);
   private readonly ui = inject(UiService);
   private readonly router = inject(RouterExtensions);
+  private readonly scanner = inject(ScannerService);
+  private readonly reminders = inject(ReminderService);
 
   readonly user = this.auth.user;
   readonly loading = this.lists.loading;
@@ -26,6 +31,37 @@ export class ListsPage {
   readonly showArchived = signal(false);
   readonly newName = signal('');
   readonly firstName = computed(() => (this.user()?.displayName ?? '').split(' ')[0]);
+
+  constructor() {
+    // First screen after sign-in: (re)schedule the weekly reminder, asking for permission once.
+    this.reminders.ensureScheduled();
+  }
+
+  settings() {
+    this.router.navigate(['/settings']);
+  }
+
+  /** Scan a list's QR code (ML Kit) and join it. */
+  async scan() {
+    const value = await this.scanner.scan();
+    if (!value) return;
+    const join = parseJoinPayload(value);
+    if (!join) return this.ui.error('That QR code isn\u2019t a shopping-list invite.');
+    if (this.active().some((l) => l.id === join.listId) || this.archived().some((l) => l.id === join.listId)) {
+      return this.router.navigate(['/lists', join.listId]);
+    }
+    const ok = await this.ui.confirm('Join list?', `Join \u201c${join.name}\u201d? Everyone on it will see your name and email.`, 'Join');
+    if (!ok) return;
+    try {
+      await this.ui.busy('Joining\u2026', () => this.lists.joinWithCode(join));
+      this.ui.toast(`Joined \u201c${join.name}\u201d`);
+      this.router.navigate(['/lists', join.listId]);
+    } catch (e: any) {
+      const denied = /permission|PERMISSION_DENIED|not-found|NOT_FOUND/i.test(String(e?.message ?? e));
+      if (denied) this.ui.error('This QR code has expired or been revoked. Ask for a new one.');
+      else this.ui.error('Could not join the list.', e);
+    }
+  }
 
   open(list: ShoppingList) {
     this.router.navigate(['/lists', list.id]);
@@ -79,6 +115,7 @@ export class ListsPage {
   async signOut() {
     const ok = await this.ui.confirm('Sign out?', 'Your lists stay in the cloud and come back when you sign in again.', 'Sign out');
     if (!ok) return;
+    await this.reminders.cancelAll();
     await this.auth.signOut();
     this.router.navigate(['/login'], { clearHistory: true });
   }

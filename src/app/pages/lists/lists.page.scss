@@ -62,6 +62,13 @@
   color: #5f6b66;
 }
 
+.scan-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
 .empty {
   display: flex;
   flex-direction: column;
@@ -71,5 +78,7 @@
 }
 
 .empty-icon {
-  font-size: 48;
+  width: 56;
+  height: 56;
+  color: #9aa59f;
 }

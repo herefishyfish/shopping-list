@@ -5,6 +5,8 @@ rules_version = '2';
 //   users/{uid}/history/{key}   that user's item history for the type-ahead – private
 //   lists/{listId}              memberIds can read/write; invitedEmails can read + accept/decline
 //   lists/{listId}/items/{id}   readable/writable by list members
+//   lists/{listId}/joinCodes/{code}  short-lived codes shown as a QR code; anyone holding a
+//                                    valid code can add *themselves* to the list
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -34,18 +36,35 @@ service cloud.firestore {
         return request.auth.token.email != null && myEmail() in resource.data.invitedEmails;
       }
 
-      // An invitee may only add themselves to memberIds/members and/or remove their own
-      // email from invitedEmails – i.e. accept or decline. Nothing else.
-      function isAcceptOrDecline() {
+      // The update only adds the caller to memberIds/members (never removes anyone) and
+      // touches nothing outside `allowedKeys`.
+      function onlyAddsSelf(allowedKeys) {
         let before = resource.data;
         let after = request.resource.data;
         let addedMembers = after.memberIds.toSet().difference(before.memberIds.toSet());
         let removedMembers = before.memberIds.toSet().difference(after.memberIds.toSet());
-        return after.diff(before).affectedKeys().hasOnly(['memberIds', 'members', 'invitedEmails', 'updatedAt'])
-          && !(myEmail() in after.invitedEmails)
+        return after.diff(before).affectedKeys().hasOnly(allowedKeys)
           && addedMembers.hasOnly([request.auth.uid])
           && removedMembers.size() == 0
           && after.members.diff(before.members).affectedKeys().hasOnly([request.auth.uid]);
+      }
+
+      // An invitee may only add themselves and/or remove their own email from
+      // invitedEmails – i.e. accept or decline. Nothing else.
+      function isAcceptOrDecline() {
+        return onlyAddsSelf(['memberIds', 'members', 'invitedEmails', 'updatedAt'])
+          && !(myEmail() in request.resource.data.invitedEmails);
+      }
+
+      // Anyone who scanned a list's QR code may add themselves, provided the code they
+      // present (written to `joinCode`) exists and hasn't expired.
+      function isJoinWithCode() {
+        let code = request.resource.data.get('joinCode', null);
+        let codePath = /databases/$(database)/documents/lists/$(listId)/joinCodes/$(code);
+        return code is string
+          && onlyAddsSelf(['memberIds', 'members', 'joinCode', 'updatedAt'])
+          && exists(codePath)
+          && get(codePath).data.expiresAt > request.time.toMillis();
       }
 
       allow read: if signedIn() && (isMember() || isInvited());
@@ -62,6 +81,7 @@ service cloud.firestore {
           && (resource.data.ownerId == request.auth.uid
               || resource.data.memberIds.toSet().difference(request.resource.data.memberIds.toSet()).hasOnly([request.auth.uid])))
         || (isInvited() && isAcceptOrDecline())
+        || isJoinWithCode()
       );
 
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
@@ -71,6 +91,20 @@ service cloud.firestore {
           return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
         }
         allow read, write: if signedIn() && listMember();
+      }
+
+      match /joinCodes/{code} {
+        function listMember() {
+          return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
+        }
+        allow read, delete: if signedIn() && listMember();
+        // Codes are created by members, for themselves, and live at most 7 days.
+        allow create: if signedIn() && listMember()
+          && request.resource.data.keys().hasOnly(['createdBy', 'createdAt', 'expiresAt'])
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.expiresAt is int
+          && request.resource.data.expiresAt <= request.time.toMillis() + 7 * 24 * 60 * 60 * 1000;
+        allow update: if false;
       }
     }
   }

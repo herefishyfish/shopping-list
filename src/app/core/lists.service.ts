@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { db } from './firebase';
 import { HistoryService } from './history.service';
 import { ListItem, ShoppingList } from './models';
+import { JOIN_CODE_TTL_MS, JoinPayload, buildJoinPayload } from './qr';
 import { displayName, normalizeName } from './suggest';
 
 type Unsubscribe = () => void;
@@ -121,6 +122,7 @@ export class ListsService {
       items.docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
       await batch.commit();
     }
+    await this.revokeJoinCodes(list);
     await listRef.delete();
   }
 
@@ -157,6 +159,44 @@ export class ListsService {
 
   declineInvite(list: ShoppingList) {
     return this.touch(list.id, { invitedEmails: FieldValue.arrayRemove([this.auth.user()!.email.toLowerCase()]) });
+  }
+
+  // ---------------------------------------------------------------- QR-code joining
+
+  /**
+   * Creates a fresh join code (valid for 24h) and returns the payload to render as a QR code.
+   * The code is a Firestore auto-id (~120 bits), so it can't be guessed.
+   */
+  async createJoinPayload(list: ShoppingList): Promise<{ payload: string; expiresAt: number }> {
+    const now = Date.now();
+    const expiresAt = now + JOIN_CODE_TTL_MS;
+    const ref = db().collection('lists').doc(list.id).collection('joinCodes').doc();
+    await ref.set({ createdBy: this.auth.uid, createdAt: now, expiresAt });
+    return { payload: buildJoinPayload({ listId: list.id, code: ref.id, name: list.name }), expiresAt };
+  }
+
+  /** Invalidates every QR code ever shown for this list. */
+  async revokeJoinCodes(list: ShoppingList): Promise<number> {
+    const codes = await db().collection('lists').doc(list.id).collection('joinCodes').get();
+    for (let i = 0; i < codes.docs.length; i += 450) {
+      const batch = db().batch();
+      codes.docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
+    return codes.docs.length;
+  }
+
+  /**
+   * Adds the current user to a list using a scanned join code. The security rules check the
+   * code exists under the list and hasn't expired; we can't read the list until this succeeds.
+   */
+  joinWithCode(join: JoinPayload) {
+    const me = this.auth.user()!;
+    return this.touch(join.listId, {
+      memberIds: FieldValue.arrayUnion([me.uid]),
+      [`members.${me.uid}`]: { name: me.displayName, email: me.email.toLowerCase() },
+      joinCode: join.code,
+    });
   }
 
   // ---------------------------------------------------------------- items

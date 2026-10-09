@@ -1,0 +1,34 @@
+.row {
+  flex-direction: row;
+  align-items: center;
+  gap: 12;
+}
+
+.card {
+  gap: 8;
+}
+
+.chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6;
+}
+
+.chip {
+  padding: 8 12;
+  border-radius: 16;
+  font-size: 14;
+  font-weight: normal;
+  color: #1f5a41;
+  background-color: #eef1ef;
+}
+
+.chip.active {
+  color: #ffffff;
+  background-color: #2e7d5b;
+}
+
+.time {
+  height: 160;
+}

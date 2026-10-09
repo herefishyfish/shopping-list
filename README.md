@@ -15,6 +15,15 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
 - **Type-ahead:** everything you've ever added (or ticked off from a shared list) is remembered with
   a purchase count. Typing in the "Add an item" box searches it (prefix matches first, then by how often you
   buy it). With nothing typed you get one-tap "Buy again" chips.
+- **QR-code sharing:** the share sheet shows a QR code (`qrcode-generator` → one SVG path,
+  drawn natively by `@nativescript/canvas-svg` 3 beta). Others tap **Scan** and join through an
+  **ML Kit** scanner (`@nativescript/mlkit-core` + `@nativescript/mlkit-barcode-scanning`) opened
+  as a native modal. Codes last 24h and can be revoked, and the security rules check them on the server.
+- **Weekly reminder:** a local notification (`@nativescript/local-notifications`), on Mondays at
+  7:00 pm Perth time (AWST) by default. You can change the day, time and time zone (Perth, or
+  the phone's own), or turn it off.
+- **SVG icons:** `src/assets/icons/*.svg`, rendered with `<SvgView>` (`@nativescript/canvas-svg`)
+  and coloured through CSS `color` (`currentColor`).
 - **Plugins:** `@nativescript-community/ui-material-bottomsheet` (share sheet),
   `@nativescript-community/ui-material-snackbar` (undo/errors), `@nativescript-community/ui-checkbox`,
   `@nstudio/nativescript-loading-indicator` (sign-in / delete progress).
@@ -26,7 +35,9 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
 | Sign in | Google, or email + password (create account / sign in) |
 | Lists | See your lists with "n to buy" counts, accept/decline invitations, create a list, show archived lists, sign out |
 | List | Add items (with an optional quantity) using the type-ahead, tick items off (they move to "In the trolley"), tap a quantity to edit it, remove items with undo. The **More** menu has rename, untick everything, clear ticked, archive/restore, and delete (owner) or leave (member) |
-| Share sheet | Invite people by email, see members and pending invites, cancel invites, remove members (owner only) |
+| Share sheet | **By email:** invite people, see members and pending invites, cancel invites, remove members (owner only). **QR code:** show a join QR, create a new code, revoke all codes |
+| Scanner (modal) | ML Kit camera scanner (Lists → **Scan**). Asks before joining the list from the QR code |
+| Reminders | Weekly notification on/off, day, time, Perth/phone time zone, send a test |
 
 ## Project layout
 
@@ -43,11 +54,16 @@ src/
       lists.service.ts            lists, sharing/invitations, items (batched writes keep counts in sync)
       history.service.ts          per-user item history that feeds the type-ahead
       suggest.ts                  pure ranking / normalisation helpers (unit-tested)
+      qr.ts                       join-link payload, QR matrix → SVG (unit-tested)
+      reminder-time.ts            next reminder time, AWST / device zone (unit-tested)
+      reminder.service.ts         schedules the weekly local notification
       ui.service.ts               snackbar, loading indicator, dialogs
     pages/                        login, lists, list (routed pages: `*-page` selectors)
     components/
       item-entry/                 add-item bar with type-ahead + "buy again" chips
-      share-sheet/                material bottom sheet for sharing
+      share-sheet/                material bottom sheet for sharing (email + QR tabs)
+      qr-code/                    <qr-code [value]> rendered as SVG
+      scanner/                    ML Kit scanner modal + ScannerService.scan()
 firestore.rules                   security rules (see below)
 rules-tests/                      rules tests that run against the Firestore emulator
 tests/                            unit tests for the type-ahead logic
@@ -60,6 +76,7 @@ users/{uid}                      { displayName, email, emailLower, photoUrl, las
 users/{uid}/history/{nameKey}    { name, nameLower, count, lastUsed }        ← type-ahead source
 lists/{listId}                   { name, ownerId, memberIds[], members{uid:{name,email}},
                                    invitedEmails[], itemCount, doneCount, archived, createdAt, updatedAt }
+lists/{listId}/joinCodes/{code} { createdBy, createdAt, expiresAt }      ← QR codes
 lists/{listId}/items/{itemId}    { name, nameLower, quantity, checked, addedBy, addedByName,
                                    createdAt, checkedAt }
 ```
@@ -69,6 +86,13 @@ sign in with that email, the list appears under **Invitations**. Accepting moves
 `memberIds`. The security rules only let an invitee add themselves and remove their own invite,
 so an invitation can't be used to do anything else. Members can edit everything except the
 owner. Only the owner can remove other people or delete the list.
+
+**How QR joining works:** a member creates `lists/{id}/joinCodes/{code}`, where the code is a
+Firestore auto-id (about 120 bits) that expires after 24h. The QR code encodes
+`shoppinglist://join?l=<listId>&c=<code>&n=<name>`. The scanner adds itself to `memberIds` and
+writes `joinCode: <code>`. The rules allow that only if the code exists, hasn't expired, and the
+caller is adding nobody but themselves. Strangers can't read join codes, and "Revoke all codes"
+deletes them.
 
 ## Setup
 
@@ -104,6 +128,8 @@ Requires the NativeScript CLI 9 (`npm i -g nativescript`) and a working Android 
    ```bash
    npx firebase-tools deploy --only firestore:rules,firestore:indexes
    ```
+8. Camera and notification permissions are already declared (`NSCameraUsageDescription`,
+   `CAMERA` and `POST_NOTIFICATIONS`). The app asks for them the first time they're needed.
 
 Both Firebase config files are git-ignored.
 
@@ -117,7 +143,7 @@ ns run ios
 ## Checks
 
 ```bash
-npm test                 # type-ahead ranking / normalisation unit tests
+npm test                 # type-ahead, QR payload/SVG and reminder-time unit tests
 npm run bundle:android   # full AOT webpack build (also: bundle:ios)
 cd rules-tests && npm install && npm test   # firestore.rules against the emulator (needs Java)
 ```
@@ -131,5 +157,7 @@ cd rules-tests && npm install && npm test   # firestore.rules against the emulat
 - Use unitless lengths (`padding: 12`). In NativeScript, `px` means physical pixels.
 - MasonKit's `<input>` emits DOM-style `input`/`change` events, so binding looks like the web:
   `[value]="query()" (input)="query.set($event.target.value)"`.
+- `<svg>` in any letter case is put in Angular's SVG namespace, so the native SVG view is
+  registered as `<SvgView>`.
 - MasonKit is a beta. If a release changes element names or events, check
   `node_modules/@triniwiz/nativescript-masonkit/angular/README.md`.

@@ -5,12 +5,14 @@ import { ListsService } from '../../core/lists.service';
 import { ShoppingList } from '../../core/models';
 import { UiService } from '../../core/ui.service';
 import { isEmail } from '../../core/suggest';
+import { QrCodeComponent } from '../qr-code/qr-code.component';
 
 /** Bottom sheet for inviting a partner / housemates to a list and managing who has access. */
 @Component({
   selector: 'share-sheet',
   templateUrl: './share-sheet.html',
   styleUrls: ['./share-sheet.scss'],
+  imports: [QrCodeComponent],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class ShareSheet {
@@ -20,6 +22,10 @@ export class ShareSheet {
   private readonly ui = inject(UiService);
 
   readonly list = signal<ShoppingList | null>(null);
+  readonly mode = signal<'email' | 'qr'>('email');
+  readonly qrPayload = signal('');
+  readonly qrExpiresAt = signal(0);
+  readonly qrBusy = signal(false);
   readonly email = signal('');
   readonly error = signal('');
   readonly me = computed(() => this.auth.user()?.uid);
@@ -38,6 +44,47 @@ export class ShareSheet {
   constructor() {
     const unsub = this.lists.watchList(this.params.context.listId, (l) => this.list.set(l));
     inject(DestroyRef).onDestroy(unsub);
+  }
+
+  async showQr(forceNew = false) {
+    this.mode.set('qr');
+    this.ui.dismissKeyboard();
+    const list = this.list();
+    if (!list || this.qrBusy()) return;
+    // Re-use the code from this session unless it's about to expire.
+    if (!forceNew && this.qrPayload() && this.qrExpiresAt() - Date.now() > 10 * 60 * 1000) return;
+    this.qrBusy.set(true);
+    try {
+      const { payload, expiresAt } = await this.lists.createJoinPayload(list);
+      this.qrPayload.set(payload);
+      this.qrExpiresAt.set(expiresAt);
+    } catch (e) {
+      this.ui.error('Could not create a QR code', e);
+    } finally {
+      this.qrBusy.set(false);
+    }
+  }
+
+  async revokeQr() {
+    const list = this.list();
+    if (!list) return;
+    if (!(await this.ui.confirm('Revoke QR codes?', 'Every QR code shown for this list stops working. People who already joined keep access.', 'Revoke'))) return;
+    try {
+      await this.lists.revokeJoinCodes(list);
+      this.qrPayload.set('');
+      this.qrExpiresAt.set(0);
+      this.ui.toast('QR codes revoked');
+      this.mode.set('email');
+    } catch (e) {
+      this.ui.error('Could not revoke the codes', e);
+    }
+  }
+
+  expiryLabel() {
+    const d = new Date(this.qrExpiresAt());
+    const sameDay = d.toDateString() === new Date().toDateString();
+    const time = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    return sameDay ? `today at ${time}` : `tomorrow at ${time}`;
   }
 
   initial(name: string) {

@@ -58,6 +58,8 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>REPLACE_WITH_IOS_CLIENT_ID.apps.googleusercontent.com</string>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera is used to scan a QR code to join a shared shopping list.</string>
 	<key>UIApplicationSceneManifest</key>
     <dict>
       <key>UIApplicationPreferredDefaultSceneSessionRole</key>

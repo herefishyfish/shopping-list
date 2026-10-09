@@ -1,0 +1,40 @@
+<ActionBar title="Reminders" class="action-bar">
+  <NavigationButton android.systemIcon="ic_menu_back" text="Lists"></NavigationButton>
+</ActionBar>
+
+<div class="page">
+  <main class="scroll">
+    <section class="card row">
+      <div class="grow">
+        <h4>Weekly shopping reminder</h4>
+        <span class="muted">{{ s().enabled ? summary() : 'Off' }}</span>
+      </div>
+      <Switch [checked]="s().enabled" (checkedChange)="setEnabled($any($event).value)"></Switch>
+    </section>
+
+    @if (s().enabled) {
+      <section class="card">
+        <h3 class="section-title">Day</h3>
+        <div class="chips">
+          @for (d of days; track d.i) {
+            <button class="chip" [class.active]="s().weekday === d.i" (tap)="setDay(d.i)">{{ d.short }}</button>
+          }
+        </div>
+
+        <h3 class="section-title">Time</h3>
+        <TimePicker class="time" [hour]="s().hour" [minute]="s().minute" (timeChange)="onTime($any($event).value)"></TimePicker>
+
+        <h3 class="section-title">Time zone</h3>
+        <div class="chips">
+          <button class="chip" [class.active]="s().zone === 'awst'" (tap)="setZone('awst')">Perth (AWST)</button>
+          <button class="chip" [class.active]="s().zone === 'device'" (tap)="setZone('device')">This phone's time</button>
+        </div>
+      </section>
+
+      <p class="muted center">Next reminder: {{ nextLabel() }}</p>
+      <button class="btn ghost" (tap)="test()">Send a test notification</button>
+    }
+
+    <p class="muted small center">Reminders are set per phone, so everyone sharing a list can pick their own.</p>
+  </main>
+</div>

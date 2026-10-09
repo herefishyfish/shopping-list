@@ -2,16 +2,37 @@
 <StackLayout class="sheet-root">
   <div class="sheet">
     <h2>Share “{{ list()?.name }}”</h2>
-    <p class="muted">
-      Invite your partner or housemates by the email they sign in with. They'll see the invitation on their lists screen, and everyone can add, tick off and remove items.
-    </p>
-
-    <div class="invite-row">
-      <input class="grow" type="email" placeholder="name@example.com" [value]="email()" (input)="email.set($event.target.value)" />
-      <button class="btn primary" (tap)="invite()">Invite</button>
+    <div class="tabs">
+      <button class="tab" [class.active]="mode() === 'email'" (tap)="mode.set('email')">By email</button>
+      <button class="tab" [class.active]="mode() === 'qr'" (tap)="showQr()">QR code</button>
     </div>
-    @if (error()) {
-      <p class="error">{{ error() }}</p>
+
+    @if (mode() === 'email') {
+      <p class="muted">
+        Invite your partner or housemates by the email they sign in with. They'll see the invitation on their lists screen, and everyone can add, tick off and remove items.
+      </p>
+      <div class="invite-row">
+        <input class="grow" type="email" placeholder="name@example.com" [value]="email()" (input)="email.set($event.target.value)" />
+        <button class="btn primary" (tap)="invite()">Invite</button>
+      </div>
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+    } @else {
+      <section class="qr-panel">
+        @if (qrPayload()) {
+          <qr-code class="qr" [value]="qrPayload()" [size]="232"></qr-code>
+          <p class="muted center">
+            On their phone: <strong>Lists → Scan</strong>. Anyone who scans this can join until {{ expiryLabel() }}.
+          </p>
+        } @else {
+          <p class="muted center">{{ qrBusy() ? 'Creating a code…' : 'No active code.' }}</p>
+        }
+        <div class="qr-actions">
+          <button class="btn small ghost" (tap)="showQr(true)">New code</button>
+          <button class="btn small link" (tap)="revokeQr()">Revoke all codes</button>
+        </div>
+      </section>
     }
 
     <h3 class="section-title">People</h3>
