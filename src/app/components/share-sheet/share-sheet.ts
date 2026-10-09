@@ -6,13 +6,14 @@ import { ShoppingList } from '../../core/models';
 import { UiService } from '../../core/ui.service';
 import { isEmail } from '../../core/suggest';
 import { QrCodeComponent } from '../qr-code/qr-code.component';
+import { AndroidInsetsDirective } from '../../core/android-insets.directive';
 
 /** Bottom sheet for inviting a partner / housemates to a list and managing who has access. */
 @Component({
   selector: 'share-sheet',
   templateUrl: './share-sheet.html',
   styleUrls: ['./share-sheet.scss'],
-  imports: [QrCodeComponent],
+  imports: [QrCodeComponent, AndroidInsetsDirective],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class ShareSheet {

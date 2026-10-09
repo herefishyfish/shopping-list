@@ -4,6 +4,7 @@ import { EventData, Utils } from '@nativescript/core';
 import { BarcodeResult } from '@nativescript/mlkit-barcode-scanning';
 import { DetectionEvent, DetectionType, MLKitView } from '@nativescript/mlkit-core';
 import { Subject, distinctUntilChanged, take } from 'rxjs';
+import { AndroidInsetsDirective } from '../../core/android-insets.directive';
 
 /**
  * Full-screen ML Kit QR scanner shown as a native modal. Closes with the first scanned
@@ -13,7 +14,8 @@ import { Subject, distinctUntilChanged, take } from 'rxjs';
 @Component({
   selector: 'scanner-modal',
   template: `
-    <GridLayout class="scanner-modal" iosOverflowSafeArea="true">
+    <!-- Camera stays full-bleed; only the controls move above the navigation bar. -->
+    <GridLayout class="scanner-modal" iosOverflowSafeArea="true" androidInsets="bottom" [insetsTarget]="controls">
       @if (available) {
         <MLKitView
           iosOverflowSafeArea="true"
@@ -28,7 +30,7 @@ import { Subject, distinctUntilChanged, take } from 'rxjs';
         ></MLKitView>
       }
       <StackLayout class="viewfinder" isUserInteractionEnabled="false"></StackLayout>
-      <div class="controls">
+      <div class="controls" #controls>
         @if (!available) {
           <p class="hint">Scanning isn't supported on this device.</p>
         } @else if (denied()) {
@@ -87,6 +89,7 @@ import { Subject, distinctUntilChanged, take } from 'rxjs';
       }
     `,
   ],
+  imports: [AndroidInsetsDirective],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class ScannerModalComponent {

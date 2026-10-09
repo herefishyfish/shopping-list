@@ -78,7 +78,8 @@ export function qrSvg(value: string, color = '#1c2420', quiet = 2): string {
     }
   }
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" shape-rendering="crispEdges">` +
+    // width/height 100%: fill the view (an intrinsic size would draw at ~33px, top-left).
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" shape-rendering="crispEdges">` +
     `<rect width="${size}" height="${size}" fill="#ffffff"/>` +
     `<path d="${d}" fill="${color}"/></svg>`
   );
