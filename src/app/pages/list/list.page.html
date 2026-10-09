@@ -66,8 +66,6 @@
         <span class="grow">{{ done().length }} of {{ items().length }} ordered</span>
         @if (done().length) {
           <button class="btn small primary" (tap)="startNextWeek()">Start next week</button>
-        } @else if (!shared()) {
-          <button class="btn link small" (tap)="share()">Share with your household</button>
         }
       </footer>
     }
