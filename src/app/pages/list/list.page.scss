@@ -61,6 +61,17 @@
   color: c(faint);
 }
 
+.week {
+  margin-bottom: 2;
+}
+
+.banner.invite {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
 .banner {
   padding: 10 12;
   border-radius: 10;

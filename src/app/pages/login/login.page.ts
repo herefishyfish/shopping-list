@@ -61,7 +61,7 @@ export class LoginPage {
 
   private done() {
     this.ui.dismissKeyboard();
-    this.router.navigate(['/lists'], { clearHistory: true });
+    this.router.navigate(['/start'], { clearHistory: true });
   }
 }
 

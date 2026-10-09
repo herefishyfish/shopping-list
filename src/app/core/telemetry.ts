@@ -17,13 +17,12 @@ export type AnalyticsEvent =
   | 'login'
   | 'sign_up'
   | 'list_created'
-  | 'list_archived'
+  | 'week_completed'
   | 'list_deleted'
   | 'list_left'
   | 'list_joined'
   | 'item_added'
   | 'item_checked'
-  | 'items_cleared'
   | 'share_invite_sent'
   | 'share_qr_shown'
   | 'join_codes_revoked'
@@ -64,10 +63,10 @@ export function track(event: AnalyticsEvent, params: Record<string, string | num
   safely(() => firebase().analytics().logEvent(event, params));
 }
 
-/** GA4 screen_view with route patterns (ids stripped), e.g. "/lists/:id". */
+/** GA4 screen_view with route patterns (ids stripped), e.g. "/list/:id". */
 export function trackScreen(url: string) {
   if (!ready) return;
-  const screen = url.split('?')[0].replace(/\/lists\/[^/]+/, '/lists/:id') || '/';
+  const screen = url.split('?')[0].replace(/\/list\/[^/]+/, '/list/:id') || '/';
   safely(() => firebase().analytics().logEvent('screen_view', { screen_name: screen, screen_class: screen }));
 }
 

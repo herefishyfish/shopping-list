@@ -1,5 +1,4 @@
 <ActionBar [title]="list()?.name ?? ''" class="action-bar">
-  <NavigationButton android.systemIcon="ic_menu_back" text="Lists"></NavigationButton>
   <ActionItem text="Share" ios.position="right" android.position="actionBar" (tap)="share()"></ActionItem>
   <ActionItem text="More" ios.position="right" android.position="actionBar" (tap)="menu()"></ActionItem>
 </ActionBar>
@@ -13,14 +12,20 @@
     <item-entry [exclude]="onList()" (added)="add($event)"></item-entry>
 
     <main class="scroll items">
-      @if (list()?.archived) {
-        <p class="banner">This list is archived. Use “More” to restore it.</p>
+      @for (invite of invites(); track invite.id) {
+        <article class="banner invite">
+          <span class="grow">You're invited to “{{ invite.name }}”</span>
+          <button class="btn small primary" (tap)="acceptInvite(invite)">Join</button>
+          <button class="btn small link" (tap)="declineInvite(invite)">Decline</button>
+        </article>
       }
+
+      <p class="week muted small">{{ weekLabel() }}</p>
 
       @if (!items().length) {
         <section class="empty">
           <SvgView class="empty-icon" src="~/assets/icons/basket.svg"></SvgView>
-          <p class="muted center">Nothing on the list. Start typing above - things you've bought before will pop up.</p>
+          <p class="muted center">Nothing on the list yet. Add things as you run out during the week – things you've ordered before pop up as you type.</p>
         </section>
       }
 
@@ -39,7 +44,7 @@
       }
 
       @if (done().length) {
-        <h3 class="section-title">In the trolley · {{ done().length }}</h3>
+        <h3 class="section-title">Ordered · {{ done().length }}</h3>
         @for (item of done(); track item.id) {
           <article class="item checked">
             <CheckBox class="check" fillColor="#2e7d5b" tintColor="#9aa59f" [checked]="true" (checkedChange)="toggle(item, $any($event).value)"></CheckBox>
@@ -57,9 +62,11 @@
 
     @if (items().length) {
       <footer class="progress">
-        <span>{{ done().length }} of {{ items().length }} ticked</span>
-        @if (!shared()) {
-          <button class="btn link small" (tap)="share()">Share with someone</button>
+        <span class="grow">{{ done().length }} of {{ items().length }} ordered</span>
+        @if (done().length) {
+          <button class="btn small primary" (tap)="startNextWeek()">Start next week</button>
+        } @else if (!shared()) {
+          <button class="btn link small" (tap)="share()">Share with your household</button>
         }
       </footer>
     }

@@ -195,3 +195,22 @@ test('a join code cannot be used to add others or change the list', async () => 
   await assertFails(updateDoc(doc(db, 'lists/l1'), { memberIds: ['eve'], 'members.eve': { name: 'e', email: 'e' }, joinCode: 'good' }));
   await assertFails(updateDoc(doc(db, 'lists/l1'), { memberIds: arrayUnion('eve'), 'members.alice': { name: 'x', email: 'x' }, joinCode: 'good' }));
 });
+
+// ---------------------------------------------------------------- weekly order history
+
+test('members can close off a week; others cannot read or forge it', async () => {
+  await bobJoined();
+  const week = { completedAt: 1, completedBy: 'bob', completedByName: 'Bob', items: [{ name: 'Milk', quantity: '', addedByName: 'Alice' }] };
+  const db = as(BOB);
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'lists/l1/weeks/w1'), week);
+  batch.delete(doc(db, 'lists/l1/items/i1'));
+  batch.update(doc(db, 'lists/l1'), { itemCount: 0, doneCount: 0, weekStartedAt: 2, lastOrderAt: 2, lastOrderByName: 'Bob', updatedAt: 2 });
+  await assertSucceeds(batch.commit());
+  await assertSucceeds(getDocs(collection(as(ALICE), 'lists/l1/weeks')));
+  await assertFails(setDoc(doc(db, 'lists/l1/weeks/w2'), { ...week, completedBy: 'alice' }));
+  await assertFails(updateDoc(doc(db, 'lists/l1/weeks/w1'), { items: [] }));
+  await assertFails(deleteDoc(doc(db, 'lists/l1/weeks/w1')));
+  await assertFails(getDocs(collection(as(EVE), 'lists/l1/weeks')));
+  await assertSucceeds(deleteDoc(doc(as(ALICE), 'lists/l1/weeks/w1')));
+});

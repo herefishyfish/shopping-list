@@ -23,9 +23,22 @@ export interface ShoppingList {
   invitedEmails: string[];
   itemCount: number;
   doneCount: number;
-  archived: boolean;
   createdAt: number;
   updatedAt: number;
+  /** When the current week's list was started (last "Start next week", or creation). */
+  weekStartedAt: number;
+  /** Last completed order, shown under the list. */
+  lastOrderAt: number | null;
+  lastOrderByName: string | null;
+}
+
+/** `lists/{listId}/weeks/{id}` – what was ordered when a week was closed off. */
+export interface WeekRecord {
+  id: string;
+  completedAt: number;
+  completedBy: string;
+  completedByName: string;
+  items: { name: string; quantity: string; addedByName: string }[];
 }
 
 /** `lists/{listId}/items/{id}` */

@@ -5,6 +5,7 @@ rules_version = '2';
 //   users/{uid}/history/{key}   that user's item history for the type-ahead - private
 //   lists/{listId}              memberIds can read/write; invitedEmails can read + accept/decline
 //   lists/{listId}/items/{id}   readable/writable by list members
+//   lists/{listId}/weeks/{id}   order history ("Start next week") – members read/create, owner deletes
 //   lists/{listId}/joinCodes/{code}  short-lived codes shown as a QR code; anyone holding a
 //                                    valid code can add *themselves* to the list
 service cloud.firestore {
@@ -91,6 +92,19 @@ service cloud.firestore {
           return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
         }
         allow read, write: if signedIn() && listMember();
+      }
+
+      match /weeks/{weekId} {
+        function listMember() {
+          return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
+        }
+        function listOwner() {
+          return request.auth.uid == get(/databases/$(database)/documents/lists/$(listId)).data.ownerId;
+        }
+        allow read: if signedIn() && listMember();
+        allow create: if signedIn() && listMember() && request.resource.data.completedBy == request.auth.uid;
+        allow update: if false;
+        allow delete: if signedIn() && listOwner();
       }
 
       match /joinCodes/{code} {

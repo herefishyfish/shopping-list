@@ -45,8 +45,8 @@ export class ReminderService {
       await LocalNotifications.schedule([
         {
           id: REMINDER_ID,
-          title: 'Shopping time 🛒',
-          body: 'Check your shared lists and get the shopping done.',
+          title: 'Time to order the shopping 🛒',
+          body: 'Check the shared list, place this week\u2019s order, then start next week.',
           at: nextReminder(new Date(), s),
           interval: 'week',
           channel: 'Shopping reminders',
@@ -65,7 +65,7 @@ export class ReminderService {
     await LocalNotifications.schedule([
       {
         id: TEST_ID,
-        title: 'Shopping time 🛒',
+        title: 'Time to order the shopping 🛒',
         body: 'This is what your weekly reminder will look like.',
         at: new Date(Date.now() + 5000),
         channel: 'Shopping reminders',

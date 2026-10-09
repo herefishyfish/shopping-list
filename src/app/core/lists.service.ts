@@ -1,4 +1,5 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
+import { ApplicationSettings } from '@nativescript/core';
 import { FieldValue } from '@nativescript/firebase-firestore';
 import { AuthService } from './auth.service';
 import { db } from './firebase';
@@ -10,10 +11,15 @@ import { track } from './telemetry';
 
 type Unsubscribe = () => void;
 
+const CURRENT_LIST_KEY = 'currentListId';
+
 /**
- * Shopping lists live in `lists/{id}` and are shared by `memberIds`. Inviting someone adds
- * their (lower-cased) email to `invitedEmails`; when they sign in they see the invitation
- * and accepting moves them into `memberIds`. See firestore.rules for what each party may do.
+ * The household shares one list (`lists/{id}`, members in `memberIds`). Everyone adds to it
+ * during the week; at order time items get ticked off, then "Start next week" clears the
+ * ticked items (saving a `weeks/{id}` record) and carries anything unticked over.
+ *
+ * Inviting someone adds their (lower-cased) email to `invitedEmails`, or they scan a QR join
+ * code. See firestore.rules for what each party may do.
  */
 @Injectable({ providedIn: 'root' })
 export class ListsService {
@@ -26,8 +32,20 @@ export class ListsService {
 
   readonly loading = this._loading.asReadonly();
   readonly invites = this._invites.asReadonly();
-  readonly activeLists = computed(() => this._lists().filter((l) => !l.archived));
-  readonly archivedLists = computed(() => this._lists().filter((l) => l.archived));
+  readonly lists = this._lists.asReadonly();
+
+  /** The list this device shows (remembered locally; falls back to the most recently used). */
+  private readonly _currentId = signal(ApplicationSettings.getString(CURRENT_LIST_KEY, ''));
+  readonly currentList = computed(() => {
+    const lists = this._lists();
+    return lists.find((l) => l.id === this._currentId()) ?? lists[0] ?? null;
+  });
+
+  setCurrent(id: string | null) {
+    this._currentId.set(id ?? '');
+    if (id) ApplicationSettings.setString(CURRENT_LIST_KEY, id);
+    else ApplicationSettings.remove(CURRENT_LIST_KEY);
+  }
 
   constructor() {
     let subs: Unsubscribe[] = [];
@@ -85,11 +103,14 @@ export class ListsService {
       invitedEmails: [],
       itemCount: 0,
       doneCount: 0,
-      archived: false,
       createdAt: now,
       updatedAt: now,
+      weekStartedAt: now,
+      lastOrderAt: null,
+      lastOrderByName: null,
     });
     track('list_created');
+    this.setCurrent(ref.id);
     return ref.id;
   }
 
@@ -110,22 +131,57 @@ export class ListsService {
     return this.touch(list.id, { name: displayName(name) || list.name });
   }
 
-  setArchived(list: ShoppingList, archived: boolean) {
-    track('list_archived', { archived });
-    return this.touch(list.id, { archived });
-  }
-
-  /** Owner only: deletes the list and all of its items. */
-  async deleteList(list: ShoppingList) {
+  /**
+   * Close off the week: everything ticked (ordered) is removed from the list and saved in a
+   * `weeks/{id}` record; anything still unticked carries over to next week.
+   */
+  async startNextWeek(list: ShoppingList, items: ListItem[]): Promise<number> {
+    const done = items.filter((i) => i.checked);
+    const me = this.auth.user()!;
+    const now = Date.now();
     const listRef = db().collection('lists').doc(list.id);
-    const items = await listRef.collection('items').get();
+
+    const first = db().batch();
+    first.set(listRef.collection('weeks').doc(), {
+      completedAt: now,
+      completedBy: me.uid,
+      completedByName: me.displayName,
+      items: done.slice(0, 500).map((i) => ({ name: i.name, quantity: i.quantity ?? '', addedByName: i.addedByName ?? '' })),
+    });
+    first.update(listRef, {
+      itemCount: Math.max(0, items.length - done.length),
+      doneCount: 0,
+      weekStartedAt: now,
+      lastOrderAt: now,
+      lastOrderByName: me.displayName,
+      updatedAt: now,
+    });
+    done.slice(0, 400).forEach((i) => first.delete(listRef.collection('items').doc(i.id)));
+    await first.commit();
     // Firestore batches are capped at 500 writes.
-    for (let i = 0; i < items.docs.length; i += 450) {
+    for (let i = 400; i < done.length; i += 450) {
       const batch = db().batch();
-      items.docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
+      done.slice(i, i + 450).forEach((item) => batch.delete(listRef.collection('items').doc(item.id)));
       await batch.commit();
     }
+    track('week_completed', { items: done.length, carried_over: items.length - done.length });
+    return done.length;
+  }
+
+  /** Owner only: deletes the list and everything under it. */
+  async deleteList(list: ShoppingList) {
+    const listRef = db().collection('lists').doc(list.id);
+    for (const sub of ['items', 'weeks']) {
+      const docs = (await listRef.collection(sub).get()).docs;
+      // Firestore batches are capped at 500 writes.
+      for (let i = 0; i < docs.length; i += 450) {
+        const batch = db().batch();
+        docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
     await this.revokeJoinCodes(list);
+    if (this._currentId() === list.id) this.setCurrent(null);
     await listRef.delete();
     track('list_deleted', { members: list.memberIds.length });
   }
@@ -150,18 +206,20 @@ export class ListsService {
 
   leave(list: ShoppingList) {
     track('list_left');
+    if (this._currentId() === list.id) this.setCurrent(null);
     return this.removeMember(list, this.auth.uid);
   }
 
-  acceptInvite(list: ShoppingList) {
+  async acceptInvite(list: ShoppingList) {
     track('list_joined', { method: 'email' });
     const me = this.auth.user()!;
     const email = me.email.toLowerCase();
-    return this.touch(list.id, {
+    await this.touch(list.id, {
       memberIds: FieldValue.arrayUnion([me.uid]),
       [`members.${me.uid}`]: { name: me.displayName, email },
       invitedEmails: FieldValue.arrayRemove([email]),
     });
+    this.setCurrent(list.id);
   }
 
   declineInvite(list: ShoppingList) {
@@ -206,6 +264,7 @@ export class ListsService {
       [`members.${me.uid}`]: { name: me.displayName, email: me.email.toLowerCase() },
       joinCode: join.code,
     });
+    this.setCurrent(join.listId);
     track('list_joined', { method: 'qr' });
   }
 
@@ -294,24 +353,6 @@ export class ListsService {
     await batch.commit();
   }
 
-  async clearChecked(list: ShoppingList, items: ListItem[]) {
-    const done = items.filter((i) => i.checked);
-    if (!done.length) return;
-    track('items_cleared', { count: done.length });
-    const listRef = db().collection('lists').doc(list.id);
-    for (let i = 0; i < done.length; i += 450) {
-      const chunk = done.slice(i, i + 450);
-      const batch = db().batch();
-      chunk.forEach((item) => batch.delete(listRef.collection('items').doc(item.id)));
-      batch.update(listRef, {
-        itemCount: FieldValue.increment(-chunk.length),
-        doneCount: FieldValue.increment(-chunk.length),
-        updatedAt: Date.now(),
-      });
-      await batch.commit();
-    }
-  }
-
   /** Untick everything - handy for a weekly staples list. */
   async uncheckAll(list: ShoppingList, items: ListItem[]) {
     const done = items.filter((i) => i.checked);
@@ -341,7 +382,9 @@ function toList(id: string, d: any): ShoppingList {
     invitedEmails: d?.invitedEmails ?? [],
     itemCount: Math.max(0, d?.itemCount ?? 0),
     doneCount: Math.max(0, d?.doneCount ?? 0),
-    archived: !!d?.archived,
+    weekStartedAt: d?.weekStartedAt ?? d?.createdAt ?? 0,
+    lastOrderAt: d?.lastOrderAt ?? null,
+    lastOrderByName: d?.lastOrderByName ?? null,
     createdAt: d?.createdAt ?? 0,
     updatedAt: d?.updatedAt ?? 0,
   };

@@ -16,7 +16,7 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
   a purchase count. Typing in the "Add an item" box searches it (prefix matches first, then by how often you
   buy it). With nothing typed you get one-tap "Buy again" chips.
 - **QR-code sharing:** the share sheet shows a QR code (`qrcode-generator` → one SVG path,
-  drawn natively by `@nativescript/canvas-svg` 3 beta). Others tap **Scan** and join through an
+  drawn natively by `@nativescript/canvas-svg` 3 beta). Others scan it and join through an
   **ML Kit** scanner (`@nativescript/mlkit-core` + `@nativescript/mlkit-barcode-scanning`) opened
   as a native modal. Codes last 24h and can be revoked, and the security rules check them on the server.
 - **Weekly reminder:** a local notification (`@nativescript/local-notifications`), on Mondays at
@@ -45,14 +45,19 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
 
 ## Features
 
+**How it's meant to be used:** the household shares **one list**. Everyone adds things
+during the week. At order time you tick items off as they go into the order. Then **Start next
+week** clears what was ordered (saving it as that week's order history), carries anything
+unticked over, and you start again. The Monday-evening reminder nudges you to place the order.
+
 | Screen | What you can do |
 | --- | --- |
 | Sign in | Google, or email + password (create account / sign in) |
-| Lists | See your lists with "n to buy" counts, accept/decline invitations, create a list, show archived lists, sign out |
-| List | Add items (with an optional quantity) using the type-ahead, tick items off (they move to "In the trolley"), tap a quantity to edit it, remove items with undo. The **More** menu has rename, untick everything, clear ticked, archive/restore, and delete (owner) or leave (member) |
-| Share sheet | **By email:** invite people, see members and pending invites, cancel invites, remove members (owner only). **QR code:** show a join QR, create a new code, revoke all codes |
-| Scanner (modal) | ML Kit camera scanner (Lists → **Scan**). Asks before joining the list from the QR code |
-| Reminders | Weekly notification on/off, day, time, Perth/phone time zone, send a test |
+| Start (first run) | Create your household list, accept an email invite, or scan a housemate's QR code. Opens your list automatically once you have one |
+| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week**. The **More** menu has rename, untick everything, switch list, join another list (scan), settings, about, delete (owner) or leave, and sign out |
+| Share sheet | **By email:** invite, see members and pending invites, cancel invites, remove members (owner only). **QR code:** show a join QR, create a new code, revoke all codes |
+| Scanner (modal) | ML Kit camera scanner. Asks before joining |
+| Settings | Weekly reminder (day, time, Perth/phone time zone, test), usage & crash-report opt-out |
 
 ## Project layout
 
@@ -73,7 +78,7 @@ src/
       reminder-time.ts            next reminder time, AWST / device zone (unit-tested)
       reminder.service.ts         schedules the weekly local notification
       ui.service.ts               snackbar, loading indicator, dialogs
-    pages/                        login, lists, list (routed pages: `*-page` selectors)
+    pages/                        login, start (first run), list (home), settings – `*-page` selectors
     components/
       item-entry/                 add-item bar with type-ahead + "buy again" chips
       share-sheet/                material bottom sheet for sharing (email + QR tabs)
@@ -97,8 +102,10 @@ tests/                            unit tests for the type-ahead logic
 users/{uid}                      { displayName, email, emailLower, photoUrl, lastSignIn }
 users/{uid}/history/{nameKey}    { name, nameLower, count, lastUsed }        ← type-ahead source
 lists/{listId}                   { name, ownerId, memberIds[], members{uid:{name,email}},
-                                   invitedEmails[], itemCount, doneCount, archived, createdAt, updatedAt }
+                                   invitedEmails[], itemCount, doneCount, createdAt, updatedAt,
+                                   weekStartedAt, lastOrderAt, lastOrderByName }
 lists/{listId}/joinCodes/{code} { createdBy, createdAt, expiresAt }      ← QR codes
+lists/{listId}/weeks/{weekId}   { completedAt, completedBy, completedByName, items[] } ← order history
 lists/{listId}/items/{itemId}    { name, nameLower, quantity, checked, addedBy, addedByName,
                                    createdAt, checkedAt }
 ```
@@ -190,7 +197,7 @@ npm run ota:ios
 
 OTA can update anything in `src/` and `node_modules` JS. Changes to `App_Resources`
 (icons, Info.plist, manifest), native plugins or the NativeScript runtime need a new store build.
-**About** on the lists screen shows whether the store bundle or an OTA update is running.
+**More → About** on the list shows whether the store bundle or an OTA update is running.
 
 ## Checks
 

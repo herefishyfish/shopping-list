@@ -1,0 +1,46 @@
+<ActionBar title="Shared Shopping" class="action-bar"></ActionBar>
+
+<div class="page">
+  <main class="scroll">
+    @if (loading()) {
+      <section class="empty">
+        <SvgView class="empty-icon" src="~/assets/icons/cart.svg"></SvgView>
+        <p class="muted center">Loading your list…</p>
+      </section>
+    } @else {
+      <h2 class="greeting">Hi {{ firstName() }} 👋</h2>
+      <p class="muted">One list for the whole house: add things during the week, tick them off when you order, then start fresh for next week.</p>
+
+      @if (invites().length) {
+        <h3 class="section-title">You've been invited</h3>
+        @for (invite of invites(); track invite.id) {
+          <article class="card invite">
+            <div class="grow">
+              <h4>{{ invite.name }}</h4>
+              <span class="muted">From {{ ownerName(invite) }}</span>
+            </div>
+            <button class="btn small primary" (tap)="accept(invite)">Join</button>
+            <button class="btn small ghost" (tap)="decline(invite)">Decline</button>
+          </article>
+        }
+      }
+
+      <h3 class="section-title">Join your household</h3>
+      <div class="btn ghost scan-btn" (tap)="scan()">
+        <SvgView class="icon-sm" src="~/assets/icons/scan.svg"></SvgView>
+        <span>Scan their QR code</span>
+      </div>
+      <p class="muted small">On their phone: Share → QR code.</p>
+
+      <h3 class="section-title">Or start a new list</h3>
+      <section class="card new-list">
+        <div class="field grow">
+          <TextField class="input" hint="List name" [text]="listName()" (textChange)="listName.set($any($event).value)" autocapitalizationType="sentences" returnKeyType="done" (returnPress)="create()"></TextField>
+        </div>
+        <button class="btn primary" (tap)="create()">Create</button>
+      </section>
+
+      <button class="btn link" (tap)="signOut()">Sign out</button>
+    }
+  </main>
+</div>

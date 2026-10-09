@@ -15,5 +15,5 @@ export const signedOutGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const user = await auth.whenResolved();
-  return user ? router.createUrlTree(['/lists']) : true;
+  return user ? router.createUrlTree(['/start']) : true;
 };
