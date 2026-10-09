@@ -1,4 +1,4 @@
-// Must stay the first import – see ota.ts.
+// Must stay the first import - see ota.ts.
 import './ota';
 import { ErrorHandler, provideZonelessChangeDetection } from '@angular/core';
 import { Application, DiscardedErrorEventData, Trace, UnhandledErrorEventData } from '@nativescript/core';
@@ -24,7 +24,7 @@ import { CrashlyticsErrorHandler, recordError } from './app/core/telemetry';
 installMasonKit({
   componentHosts: {
     // Routed pages render an <ActionBar> + content inside a Page, and bottom-sheet / modal
-    // roots are re-parented by their services – all must stay transparent.
+    // roots are re-parented by their services - all must stay transparent.
     passthrough: [/-page$/, /-sheet$/, /-modal$/],
   },
 });
@@ -39,7 +39,7 @@ registerElement('SvgView', () => Svg);
 
 installBottomSheet();
 
-// Error handling – https://docs.nativescript.org/guide/error-handling
+// Error handling - https://docs.nativescript.org/guide/error-handling
 // Errors NativeScript core reports through Trace (bindings, navigation, …): log them in
 // development, send them to Crashlytics in production. Neither crashes the app.
 Trace.setErrorHandler({

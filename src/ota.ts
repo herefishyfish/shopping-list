@@ -22,12 +22,12 @@ export const norrix = initNorrix({
     if (status === SyncStatus.ERROR || status === SyncStatus.ROLLED_BACK || status === SyncStatus.RELOAD_FAILED) {
       console.warn(`[norrix] ${status}`, data);
     } else if (status === SyncStatus.UPDATE_INSTALLED) {
-      console.log('[norrix] update installed – applies on next launch', data);
+      console.log('[norrix] update installed - applies on next launch', data);
     }
   },
 });
 
-/** e.g. "1.0.0 (store)" or "1.0.3 · OTA 42" – shown in the About dialog. */
+/** e.g. "1.0.0 (store)" or "1.0.3 · OTA 42" - shown in the About dialog. */
 export function runningVersionLabel(): string {
   try {
     const running = norrix.getRunningUpdate();

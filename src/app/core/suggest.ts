@@ -46,7 +46,7 @@ export function rankSuggestions<T extends Suggestible>(history: readonly T[], qu
     if (!q) {
       score = 0;
     } else if (entry.nameLower === q) {
-      continue; // exact match – nothing to complete
+      continue; // exact match - nothing to complete
     } else if (entry.nameLower.startsWith(q)) {
       score = 3;
     } else if (entry.nameLower.includes(' ' + q)) {

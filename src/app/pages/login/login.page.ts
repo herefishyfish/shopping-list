@@ -67,8 +67,8 @@ export class LoginPage {
 
 function friendlyError(msg: string): string {
   if (/password is invalid|wrong-password|INVALID_LOGIN_CREDENTIALS|credential is incorrect/i.test(msg)) return 'That email and password don’t match.';
-  if (/no user record|user-not-found/i.test(msg)) return 'No account for that email yet – create one below.';
-  if (/already in use/i.test(msg)) return 'That email already has an account – sign in instead.';
+  if (/no user record|user-not-found/i.test(msg)) return 'No account for that email yet - create one below.';
+  if (/already in use/i.test(msg)) return 'That email already has an account - sign in instead.';
   if (/network/i.test(msg)) return 'You appear to be offline.';
   if (/\b10\b|DEVELOPER_ERROR/.test(msg)) return 'Google Sign-In is not configured for this build (check the SHA-1 and web client ID).';
   return msg;

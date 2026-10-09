@@ -7,7 +7,7 @@ import { rankSuggestions } from '../../core/suggest';
 export interface NewItem {
   name: string;
   quantity: string;
-  /** How it was entered – for analytics on whether the type-ahead earns its keep. */
+  /** How it was entered - for analytics on whether the type-ahead earns its keep. */
   source: 'typed' | 'suggestion' | 'buy_again';
 }
 
@@ -24,7 +24,7 @@ export interface NewItem {
 export class ItemEntryComponent {
   private readonly history = inject(HistoryService);
 
-  /** Normalised names already (unticked) on the list – never suggested again. */
+  /** Normalised names already (unticked) on the list - never suggested again. */
   readonly exclude = input<ReadonlySet<string>>(new Set());
   readonly added = output<NewItem>();
 

@@ -1,5 +1,5 @@
 /**
- * QR-code join links. Pure – no NativeScript / Firebase imports – so it is unit-tested with
+ * QR-code join links. Pure - no NativeScript / Firebase imports - so it is unit-tested with
  * plain Node (`npm test`).
  *
  * Payload: `shoppinglist://join?l=<listId>&c=<joinCode>&n=<url-encoded list name>`

@@ -1,5 +1,5 @@
 /**
- * Weekly "go shopping" reminder maths. Pure – no NativeScript imports – so it's unit-tested
+ * Weekly "go shopping" reminder maths. Pure - no NativeScript imports - so it's unit-tested
  * with plain Node (`npm test`).
  */
 
@@ -20,7 +20,7 @@ export interface ReminderSettings {
 
 export const DEFAULT_REMINDER: ReminderSettings = { enabled: true, weekday: 1, hour: 19, minute: 0, zone: 'awst' };
 
-/** AWST is a fixed UTC+8 offset – WA doesn't observe daylight saving. */
+/** AWST is a fixed UTC+8 offset - WA doesn't observe daylight saving. */
 export const AWST_OFFSET_MINUTES = 8 * 60;
 
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

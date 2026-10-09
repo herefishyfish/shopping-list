@@ -19,7 +19,7 @@ const icon = readFileSync(res('icon.svg'), 'utf8');
 const glyph = readFileSync(res('icon-glyph.svg'), 'utf8');
 const glyphInner = glyph.slice(glyph.indexOf('<path'), glyph.lastIndexOf('</svg>'));
 
-/** Glyph only (transparent), cropped to its bounding area – for splash screens. */
+/** Glyph only (transparent), cropped to its bounding area - for splash screens. */
 const splashGlyph = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="21 21 66 66">${glyphInner}</svg>`;
 /** Legacy (pre-API 26) Android launcher: rounded square with a small margin. */
 const legacyAndroid = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">

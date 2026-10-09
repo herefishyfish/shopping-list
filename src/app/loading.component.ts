@@ -5,8 +5,8 @@ import { filter, take } from 'rxjs/operators';
 
 /**
  * Shown by `runNativeScriptAngularApp({ loadingModule })` while the main app boots (Firebase
- * init + restoring the session). It matches the native splash – brand green with the same
- * `res://logo` – so launch reads as one continuous screen, then fades out once the main app
+ * init + restoring the session). It matches the native splash - brand green with the same
+ * `res://logo` - so launch reads as one continuous screen, then fades out once the main app
  * is ready.
  */
 @Component({

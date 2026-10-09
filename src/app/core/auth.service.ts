@@ -68,7 +68,7 @@ export class AuthService {
     try {
       if (GoogleSignin.isSignedIn()) await GoogleSignin.signOut();
     } catch {
-      // Not signed in with Google – nothing to do.
+      // Not signed in with Google - nothing to do.
     }
     await auth().signOut();
   }

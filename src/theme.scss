@@ -4,7 +4,7 @@
 // set on NativeScript's system classes (`.ns-light` / `.ns-dark`), which it adds to the root view
 // and to every modal / bottom-sheet root, so all screens follow the system appearance.
 // Android's own widgets (dialogs, snackbars, pickers, status bar) follow
-// App_Resources/Android/src/main/res/values-night – keep the two in sync.
+// App_Resources/Android/src/main/res/values-night - keep the two in sync.
 @use 'sass:map';
 
 $light: (

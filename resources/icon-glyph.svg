@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
   <!-- Shopping cart with a tick: the app glyph. 108×108 = Android adaptive-icon canvas; the
-       glyph sits inside the 66×66 safe zone (21–87). Paths are mirrored in
+       glyph sits inside the 66×66 safe zone (21-87). Paths are mirrored in
        App_Resources/Android/src/main/res/drawable/ic_launcher_foreground.xml. -->
   <path d="M27 30h7.5l7.4 31.5a4.5 4.5 0 0 0 4.4 3.5h23.6a4.5 4.5 0 0 0 4.3-3.2L81 39H38.7" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
   <path d="M43.5 76a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0z" fill="#ffffff"/>

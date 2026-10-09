@@ -9,7 +9,7 @@ import { historyKey, normalizeName } from './suggest';
  * Every item a user adds (or ticks off from a shared list) is upserted into
  * `users/{uid}/history/{normalised-name}` with a purchase count. The whole collection is
  * small (one doc per distinct product), so it is kept in memory via a live listener and
- * the type-ahead filters it locally – instant and works offline.
+ * the type-ahead filters it locally - instant and works offline.
  */
 @Injectable({ providedIn: 'root' })
 export class HistoryService {

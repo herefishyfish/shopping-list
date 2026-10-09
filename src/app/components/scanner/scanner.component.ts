@@ -7,7 +7,7 @@ import { Subject, distinctUntilChanged, take } from 'rxjs';
 
 /**
  * Full-screen ML Kit QR scanner shown as a native modal. Closes with the first scanned
- * value (or `null` on cancel) – callers decide what the value means. Open it through
+ * value (or `null` on cancel) - callers decide what the value means. Open it through
  * `ScannerService`.
  */
 @Component({

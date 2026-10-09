@@ -3,7 +3,7 @@
  *
  * - Collection is off in development builds (`__DEV__`) so dashboards only show real usage.
  * - Users can opt out from Settings; the choice is stored per device.
- * - Only the Firebase uid is attached – never names, emails or list contents.
+ * - Only the Firebase uid is attached - never names, emails or list contents.
  */
 import { ErrorHandler, Injectable } from '@angular/core';
 import { ApplicationSettings } from '@nativescript/core';

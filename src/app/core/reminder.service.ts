@@ -10,7 +10,7 @@ const TEST_ID = 7002;
 
 /**
  * Weekly local notification nudging you to do the shopping. Settings are per device
- * (ApplicationSettings), not synced – each housemate picks their own reminder.
+ * (ApplicationSettings), not synced - each housemate picks their own reminder.
  */
 @Injectable({ providedIn: 'root' })
 export class ReminderService {
@@ -75,7 +75,7 @@ export class ReminderService {
     return true;
   }
 
-  /** Called on sign-out – nobody to remind. */
+  /** Called on sign-out - nobody to remind. */
   async cancelAll() {
     this.applied = false;
     await LocalNotifications.cancel(REMINDER_ID).catch(() => {});

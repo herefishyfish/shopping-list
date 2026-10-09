@@ -2,7 +2,7 @@ import { NativeScriptConfig } from '@nativescript/core';
 
 export default {
   // Must match the bundle id / package name registered in your Firebase project.
-  id: 'org.nativescript.shoppinglist',
+  id: 'dev.herefishy.shoppinglist',
   appPath: 'src',
   appResourcesPath: 'App_Resources',
   // Uncaught JS exceptions are reported (Crashlytics, see src/main.ts) instead of crashing the

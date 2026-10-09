@@ -312,7 +312,7 @@ export class ListsService {
     }
   }
 
-  /** Untick everything – handy for a weekly staples list. */
+  /** Untick everything - handy for a weekly staples list. */
   async uncheckAll(list: ShoppingList, items: ListItem[]) {
     const done = items.filter((i) => i.checked);
     if (!done.length) return;

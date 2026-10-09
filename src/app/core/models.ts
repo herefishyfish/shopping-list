@@ -41,7 +41,7 @@ export interface ListItem {
   checkedAt: number | null;
 }
 
-/** `users/{uid}/history/{key}` – every item the user has ever added or ticked off. */
+/** `users/{uid}/history/{key}` - every item the user has ever added or ticked off. */
 export interface HistoryEntry {
   id: string;
   name: string;

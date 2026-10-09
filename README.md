@@ -3,8 +3,8 @@
 A NativeScript + Angular app for shopping lists you share with your partner or housemates.
 
 - **UI:** [`@triniwiz/nativescript-masonkit`](https://www.npmjs.com/package/@triniwiz/nativescript-masonkit) `1.0.0-beta.108` (latest beta). Templates use
-  ordinary web markup – `div`, `main`, `section`, `article`, `header`, `footer`, `h1`–`h4`, `p`, `span`
-  – laid out with real flexbox CSS. MasonKit's Angular integration also takes over `<button>` and
+  ordinary web markup - `div`, `main`, `section`, `article`, `header`, `footer`, `h1`-`h4`, `p`, `span`
+  - laid out with real flexbox CSS. MasonKit's Angular integration also takes over `<button>` and
   `<input>` (there is no `nbutton`; the plain tag names now resolve to MasonKit's native widgets).
   Core NativeScript is only used where there's no web equivalent: `ActionBar`, the `CheckBox`
   from `@nativescript-community/ui-checkbox`, and the native `GoogleSignInButton`.
@@ -59,7 +59,7 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
 ```
 src/
   main.ts                         installMasonKit(), native element registration, Firebase init, bootstrap
-  app.scss                        global styles – tag selectors (h1, p, input, button) + utility classes
+  app.scss                        global styles - tag selectors (h1, p, input, button) + utility classes
   environments/environment.ts     Google web client ID
   app/
     app.routes.ts                 /login, /lists, /lists/:id (with auth guards)
@@ -182,7 +182,7 @@ npx norrix sign-in
 npx norrix env set-file google-services.json App_Resources/Android/src/google-services.json
 npx norrix env set-file GoogleService-Info.plist App_Resources/iOS/GoogleService-Info.plist
 
-npm run cloud:android        # store binary – must ship once with the 3.x OTA loader
+npm run cloud:android        # store binary - must ship once with the 3.x OTA loader
 npm run cloud:ios
 npm run ota:android          # publish JS/CSS/asset changes over the air
 npm run ota:ios

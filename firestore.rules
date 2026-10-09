@@ -1,8 +1,8 @@
 rules_version = '2';
 
 // Shared shopping lists.
-//   users/{uid}                 public profile (name/email) – readable by any signed-in user
-//   users/{uid}/history/{key}   that user's item history for the type-ahead – private
+//   users/{uid}                 public profile (name/email) - readable by any signed-in user
+//   users/{uid}/history/{key}   that user's item history for the type-ahead - private
 //   lists/{listId}              memberIds can read/write; invitedEmails can read + accept/decline
 //   lists/{listId}/items/{id}   readable/writable by list members
 //   lists/{listId}/joinCodes/{code}  short-lived codes shown as a QR code; anyone holding a
@@ -50,7 +50,7 @@ service cloud.firestore {
       }
 
       // An invitee may only add themselves and/or remove their own email from
-      // invitedEmails – i.e. accept or decline. Nothing else.
+      // invitedEmails - i.e. accept or decline. Nothing else.
       function isAcceptOrDecline() {
         return onlyAddsSelf(['memberIds', 'members', 'invitedEmails', 'updatedAt'])
           && !(myEmail() in request.resource.data.invitedEmails);

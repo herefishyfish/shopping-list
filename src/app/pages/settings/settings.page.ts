@@ -59,6 +59,6 @@ export class SettingsPage {
   }
 
   private permissionDenied() {
-    this.ui.error('Notifications are turned off for this app – enable them in system settings.');
+    this.ui.error('Notifications are turned off for this app - enable them in system settings.');
   }
 }
