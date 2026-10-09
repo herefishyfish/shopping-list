@@ -1,10 +1,10 @@
 <ActionBar [title]="list()?.name ?? 'Shopping'" class="action-bar">
-  <ActionItem text="Share" ios.position="right" android.position="actionBar" (tap)="share()"></ActionItem>
+  <ActionItem text="Lists" ios.position="right" android.position="actionBar" (tap)="openLists()"></ActionItem>
   <ActionItem text="Settings" ios.position="right" android.position="actionBar" (tap)="settings()"></ActionItem>
 </ActionBar>
 
 <!-- Rows: add-item bar · scrolling list · footer pinned to the bottom of the screen. -->
-<GridLayout class="screen" rows="auto, *, auto">
+<GridLayout class="screen" pageInsets rows="auto, *, auto">
   @if (list() === null) {
     <main row="1" class="scroll">
       <p class="muted center">This list doesn't exist or isn't shared with you.</p>

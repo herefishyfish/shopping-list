@@ -11,13 +11,14 @@ import { ReminderService } from '../../core/reminder.service';
 import { ReminderSettings, ReminderZone, WEEKDAYS, describeReminder } from '../../core/reminder-time';
 import { setTelemetryOptIn, telemetryOptIn } from '../../core/telemetry';
 import { UiService } from '../../core/ui.service';
+import { PageInsetsDirective } from '../../core/page-insets.directive';
 
 /** Everything that isn't the list itself: account, household, reminders, privacy, about. */
 @Component({
   selector: 'settings-page',
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
-  imports: [NativeScriptCommonModule],
+  imports: [PageInsetsDirective, NativeScriptCommonModule],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class SettingsPage {

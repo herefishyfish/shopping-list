@@ -10,6 +10,13 @@
             but the way the app is converted may lead to visual issues 
         -->
         <item name="android:forceDarkAllowed">false</item>
+
+        <!-- Status bar sits on the ActionBar green → light icons; the navigation bar sits on
+             the page background → dark icons in light mode, light icons in dark mode. -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">@bool/light_nav_bar</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <style name="AppTheme" parent="AppThemeBase29">

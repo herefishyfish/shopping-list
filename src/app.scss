@@ -11,8 +11,11 @@
   @include palette($dark);
 }
 
+// The Page itself only shows through behind the status bar (see PageInsetsDirective), so it
+// takes the ActionBar colour; light status-bar icons suit it in both themes.
 Page {
-  background-color: c(bg);
+  background-color: c(action-bar);
+  status-bar-style: light;
 }
 
 .action-bar {

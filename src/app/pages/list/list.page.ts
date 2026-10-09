@@ -1,15 +1,15 @@
-import { Component, DestroyRef, NO_ERRORS_SCHEMA, ViewContainerRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, NO_ERRORS_SCHEMA, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { JoinService } from '../../core/join.service';
 import { ReminderService } from '../../core/reminder.service';
-import { BottomSheetService } from '@nativescript-community/ui-material-bottomsheet/angular';
+import { Dialogs } from '@nativescript/core';
 import { AuthService } from '../../core/auth.service';
 import { ListsService } from '../../core/lists.service';
 import { ListItem, ShoppingList } from '../../core/models';
 import { UiService } from '../../core/ui.service';
 import { ItemEntryComponent, NewItem } from '../../components/item-entry/item-entry.component';
-import { ShareSheet } from '../../components/share-sheet/share-sheet';
+import { PageInsetsDirective } from '../../core/page-insets.directive';
 
 @Component({
   selector: 'list-page',
@@ -17,7 +17,7 @@ import { ShareSheet } from '../../components/share-sheet/share-sheet';
   styleUrls: ['./list.page.scss'],
   // NativeScriptCommonModule wires <ActionBar>/<ActionItem> to the Page – without it the Page
   // creates its own default ActionBar (showing the app name) under ours.
-  imports: [NativeScriptCommonModule, ItemEntryComponent],
+  imports: [PageInsetsDirective, NativeScriptCommonModule, ItemEntryComponent],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class ListPage {
@@ -25,8 +25,6 @@ export class ListPage {
   private readonly auth = inject(AuthService);
   private readonly ui = inject(UiService);
   private readonly router = inject(RouterExtensions);
-  private readonly sheets = inject(BottomSheetService);
-  private readonly vcRef = inject(ViewContainerRef);
   private readonly join = inject(JoinService);
   private readonly reminders = inject(ReminderService);
 
@@ -106,14 +104,33 @@ export class ListPage {
     await this.lists.updateQuantity(list, item, qty).catch((e) => this.ui.error('Could not update the quantity', e));
   }
 
-  share() {
-    const list = this.list();
-    if (!list) return;
-    this.sheets.show(ShareSheet, {
-      viewContainerRef: this.vcRef,
-      context: { listId: list.id },
-      dismissOnBackgroundTap: true,
+  /** ActionBar "Lists": switch to another list, start a new one, or join one by QR. */
+  async openLists() {
+    const current = this.list();
+    const all = this.lists.lists();
+    const NEW = '+ New list';
+    const JOIN = 'Join a list (scan QR)';
+    const label = (name: string, id: string) => (id === current?.id ? `\u2713 ${name}` : name);
+    const choice = await Dialogs.action({
+      title: 'Lists',
+      cancelButtonText: 'Cancel',
+      actions: [...all.map((l) => label(l.name, l.id)), NEW, JOIN],
     });
+    if (choice === NEW) {
+      const name = await this.ui.prompt('New list', '', 'Create');
+      if (!name?.trim()) return;
+      try {
+        this.openList(await this.lists.createList(name));
+      } catch (e) {
+        this.ui.error('Could not create the list', e);
+      }
+    } else if (choice === JOIN) {
+      const id = await this.join.scanAndJoin();
+      if (id && id !== current?.id) this.openList(id);
+    } else {
+      const target = all.find((l) => label(l.name, l.id) === choice);
+      if (target && target.id !== current?.id) this.openList(target.id);
+    }
   }
 
   /** Close off the week: ticked (ordered) items are cleared, unticked ones carry over. */

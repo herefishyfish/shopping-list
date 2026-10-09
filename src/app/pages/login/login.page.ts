@@ -4,11 +4,13 @@ import { Page } from '@nativescript/core';
 import { AuthService } from '../../core/auth.service';
 import { UiService } from '../../core/ui.service';
 import { isEmail } from '../../core/suggest';
+import { PageInsetsDirective } from '../../core/page-insets.directive';
 
 @Component({
   selector: 'login-page',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
+  imports: [PageInsetsDirective],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class LoginPage {

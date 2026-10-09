@@ -6,6 +6,7 @@ import { ListsService } from '../../core/lists.service';
 import { ShoppingList } from '../../core/models';
 import { ReminderService } from '../../core/reminder.service';
 import { UiService } from '../../core/ui.service';
+import { PageInsetsDirective } from '../../core/page-insets.directive';
 
 /**
  * Entry point after sign-in. If you're already on a household list it goes straight there;
@@ -15,7 +16,7 @@ import { UiService } from '../../core/ui.service';
   selector: 'start-page',
   templateUrl: './start.page.html',
   styleUrls: ['./start.page.scss'],
-  imports: [NativeScriptCommonModule],
+  imports: [PageInsetsDirective, NativeScriptCommonModule],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class StartPage {

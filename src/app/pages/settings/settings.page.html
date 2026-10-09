@@ -3,7 +3,7 @@
 </ActionBar>
 
 <!-- Core GridLayout root: always fills the Page, so the scroll area gets a fixed height. -->
-<GridLayout class="screen">
+<GridLayout class="screen" pageInsets>
   <main class="scroll">
     <!-- Household list -->
     @if (list(); as l) {
@@ -17,7 +17,7 @@
           <span class="action">Rename</span>
         </div>
         <div class="row-item" (tap)="share()">
-          <span class="label grow">Invite people &amp; QR code</span>
+          <span class="label grow">Share list (invite &amp; QR code)</span>
           <span class="chevron">›</span>
         </div>
         <div class="row-item" (tap)="untickAll()">
