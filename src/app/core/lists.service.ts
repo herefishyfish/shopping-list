@@ -354,14 +354,15 @@ export class ListsService {
   }
 
   /** Untick everything - handy for a weekly staples list. */
-  async uncheckAll(list: ShoppingList, items: ListItem[]) {
-    const done = items.filter((i) => i.checked);
-    if (!done.length) return;
+  async uncheckAll(list: ShoppingList): Promise<number> {
     const listRef = db().collection('lists').doc(list.id);
+    const done = (await listRef.collection('items').where('checked', '==', true).get()).docs.map((d) => ({ id: d.id }));
+    if (!done.length) return 0;
     const batch = db().batch();
     done.forEach((item) => batch.update(listRef.collection('items').doc(item.id), { checked: false, checkedAt: null }));
     batch.update(listRef, { doneCount: 0, updatedAt: Date.now() });
     await batch.commit();
+    return done.length;
   }
 
   private touch(id: string, data: Record<string, unknown>) {

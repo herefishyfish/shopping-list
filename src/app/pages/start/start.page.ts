@@ -1,5 +1,5 @@
 import { Component, NO_ERRORS_SCHEMA, computed, effect, inject, signal } from '@angular/core';
-import { RouterExtensions } from '@nativescript/angular';
+import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { AuthService } from '../../core/auth.service';
 import { JoinService } from '../../core/join.service';
 import { ListsService } from '../../core/lists.service';
@@ -15,6 +15,7 @@ import { UiService } from '../../core/ui.service';
   selector: 'start-page',
   templateUrl: './start.page.html',
   styleUrls: ['./start.page.scss'],
+  imports: [NativeScriptCommonModule],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class StartPage {

@@ -1,6 +1,7 @@
 <ActionBar title="Shared Shopping" class="action-bar"></ActionBar>
 
-<div class="page">
+<!-- Core GridLayout root: always fills the Page, so the scroll area gets a fixed height. -->
+<GridLayout class="screen">
   <main class="scroll">
     @if (loading()) {
       <section class="empty">
@@ -43,4 +44,4 @@
       <button class="btn link" (tap)="signOut()">Sign out</button>
     }
   </main>
-</div>
+</GridLayout>

@@ -54,10 +54,10 @@ unticked over, and you start again. The Monday-evening reminder nudges you to pl
 | --- | --- |
 | Sign in | Google, or email + password (create account / sign in) |
 | Start (first run) | Create your household list, accept an email invite, or scan a housemate's QR code. Opens your list automatically once you have one |
-| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week**. The **More** menu has rename, untick everything, switch list, join another list (scan), settings, about, delete (owner) or leave, and sign out |
+| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week** (footer pinned to the bottom). ActionBar: **Share** and **Settings** |
 | Share sheet | **By email:** invite, see members and pending invites, cancel invites, remove members (owner only). **QR code:** show a join QR, create a new code, revoke all codes |
 | Scanner (modal) | ML Kit camera scanner. Asks before joining |
-| Settings | Weekly reminder (day, time, Perth/phone time zone, test), usage & crash-report opt-out |
+| Settings | Household list (rename, invite & QR, untick everything, switch list, join by scan, leave/delete), weekly reminder (day, time, Perth/phone time zone, test), privacy opt-out, account & sign out, version |
 
 ## Project layout
 
@@ -197,7 +197,7 @@ npm run ota:ios
 
 OTA can update anything in `src/` and `node_modules` JS. Changes to `App_Resources`
 (icons, Info.plist, manifest), native plugins or the NativeScript runtime need a new store build.
-**More → About** on the list shows whether the store bundle or an OTA update is running.
+**Settings** (bottom line) shows whether the store bundle or an OTA update is running.
 
 ## Checks
 
@@ -213,6 +213,11 @@ cd rules-tests && npm install && npm test   # firestore.rules against the emulat
   bottom-sheet root uses `*-sheet`. Both are passed as `passthrough` so they stay transparent (a page
   is `ActionBar` + content). Other components such as `<item-entry>` become real MasonKit boxes, so they
   can be styled from the outside like on the web.
+- Each page's root is a core `GridLayout class="screen"`, which always fills the Page, with
+  MasonKit content inside. A MasonKit root `div` with `height: 100%` didn't reliably get the Page's
+  height, so footers floated up and scroll areas couldn't scroll.
+- Pages with an `<ActionBar>` must import `NativeScriptCommonModule`. Without it, the Page adds
+  its own default ActionBar (showing the app name) under yours.
 - Use unitless lengths (`padding: 12`). In NativeScript, `px` means physical pixels.
 - Text entry uses core `<TextField class="input">` (native EditText / UITextField) rather than
   MasonKit's `<input>`, wrapped in a `<div class="field">` so it takes part in flex layout:

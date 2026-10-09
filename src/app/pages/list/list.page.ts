@@ -1,8 +1,6 @@
 import { Component, DestroyRef, NO_ERRORS_SCHEMA, ViewContainerRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { RouterExtensions } from '@nativescript/angular';
-import { Dialogs } from '@nativescript/core';
-import { runningVersionLabel } from '../../../ota';
+import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { JoinService } from '../../core/join.service';
 import { ReminderService } from '../../core/reminder.service';
 import { BottomSheetService } from '@nativescript-community/ui-material-bottomsheet/angular';
@@ -17,7 +15,9 @@ import { ShareSheet } from '../../components/share-sheet/share-sheet';
   selector: 'list-page',
   templateUrl: './list.page.html',
   styleUrls: ['./list.page.scss'],
-  imports: [ItemEntryComponent],
+  // NativeScriptCommonModule wires <ActionBar>/<ActionItem> to the Page – without it the Page
+  // creates its own default ActionBar (showing the app name) under ours.
+  imports: [NativeScriptCommonModule, ItemEntryComponent],
   schemas: [NO_ERRORS_SCHEMA],
 })
 export class ListPage {
@@ -36,7 +36,6 @@ export class ListPage {
   readonly todo = computed(() => this.items().filter((i) => !i.checked));
   readonly done = computed(() => this.items().filter((i) => i.checked));
   readonly onList = computed(() => new Set(this.todo().map((i) => i.nameLower)));
-  readonly isOwner = computed(() => this.list()?.ownerId === this.auth.user()?.uid);
   readonly shared = computed(() => (this.list()?.memberIds.length ?? 0) > 1);
   /** Invitations to *other* lists (e.g. a new household). */
   readonly invites = computed(() => this.lists.invites().filter((l) => l.id !== this.list()?.id));
@@ -145,75 +144,8 @@ export class ListPage {
     return this.join.declineInvite(invite);
   }
 
-  async menu() {
-    const list = this.list();
-    if (!list) return;
-    const others = this.lists.lists().filter((l) => l.id !== list.id);
-    const actions = [
-      'Rename list',
-      'Untick everything',
-      ...(others.length ? ['Switch list'] : []),
-      'Join another list (scan QR)',
-      'Settings',
-      'About',
-      this.isOwner() ? 'Delete list' : 'Leave list',
-      'Sign out',
-    ];
-    const choice = await Dialogs.action({ title: list.name, cancelButtonText: 'Cancel', actions });
-    try {
-      switch (choice) {
-        case 'Rename list': {
-          const name = await this.ui.prompt('Rename list', list.name);
-          if (name?.trim()) await this.lists.rename(list, name);
-          break;
-        }
-        case 'Untick everything':
-          await this.lists.uncheckAll(list, this.items());
-          break;
-        case 'Switch list': {
-          const pick = await Dialogs.action({ title: 'Switch list', cancelButtonText: 'Cancel', actions: others.map((l) => l.name) });
-          const target = others.find((l) => l.name === pick);
-          if (target) this.openList(target.id);
-          break;
-        }
-        case 'Join another list (scan QR)': {
-          const id = await this.join.scanAndJoin();
-          if (id && id !== list.id) this.openList(id);
-          break;
-        }
-        case 'Settings':
-          this.router.navigate(['/settings']);
-          break;
-        case 'About':
-          await Dialogs.alert({
-            title: 'Shared Shopping',
-            message: `Signed in as ${this.auth.user()?.email}.\nVersion ${runningVersionLabel()}\n\nAdd things during the week, tick them off as you order, then \u201cStart next week\u201d. Share the list from the Share button.`,
-            okButtonText: 'OK',
-          });
-          break;
-        case 'Delete list':
-          if (await this.ui.confirm('Delete list?', `\u201c${list.name}\u201d and its order history will be deleted for everyone it is shared with.`, 'Delete')) {
-            await this.ui.busy('Deleting\u2026', () => this.lists.deleteList(list));
-            this.goToStart();
-          }
-          break;
-        case 'Leave list':
-          if (await this.ui.confirm('Leave list?', 'You will lose access until someone invites you again.', 'Leave')) {
-            await this.lists.leave(list);
-            this.goToStart();
-          }
-          break;
-        case 'Sign out':
-          if (await this.ui.confirm('Sign out?', 'Your list stays in the cloud and comes back when you sign in again.', 'Sign out')) {
-            await this.reminders.cancelAll();
-            await this.auth.signOut();
-            this.router.navigate(['/login'], { clearHistory: true });
-          }
-          break;
-      }
-    } catch (e) {
-      this.ui.error('Something went wrong', e);
-    }
+  settings() {
+    this.router.navigate(['/settings']);
   }
 
   private openList(id: string) {

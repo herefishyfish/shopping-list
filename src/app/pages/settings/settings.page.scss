@@ -1,13 +1,50 @@
 @use '../../../theme' as *;
 
-.row {
+.group {
+  padding: 0;
+  gap: 0;
+}
+
+.row-item {
+  display: flex;
   flex-direction: row;
   align-items: center;
   gap: 12;
+  padding: 14 16;
+  border-bottom-width: 1;
+  border-color: c(divider);
 }
 
-.card {
+.row-item .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 2;
+}
+
+.label {
+  font-size: 16;
+  color: c(text);
+}
+
+.label.danger {
+  color: c(danger);
+}
+
+.action {
+  font-size: 14;
+  color: c(primary);
+}
+
+.chevron {
+  font-size: 22;
+  color: c(faint);
+}
+
+.sub {
+  display: flex;
+  flex-direction: column;
   gap: 8;
+  padding: 12 16 16 16;
 }
 
 .chips {
@@ -33,4 +70,8 @@
 
 .time {
   height: 160;
+}
+
+.version {
+  margin-top: 8;
 }

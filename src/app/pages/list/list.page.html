@@ -1,17 +1,18 @@
-<ActionBar [title]="list()?.name ?? ''" class="action-bar">
+<ActionBar [title]="list()?.name ?? 'Shopping'" class="action-bar">
   <ActionItem text="Share" ios.position="right" android.position="actionBar" (tap)="share()"></ActionItem>
-  <ActionItem text="More" ios.position="right" android.position="actionBar" (tap)="menu()"></ActionItem>
+  <ActionItem text="Settings" ios.position="right" android.position="actionBar" (tap)="settings()"></ActionItem>
 </ActionBar>
 
-<div class="page">
+<!-- Rows: add-item bar · scrolling list · footer pinned to the bottom of the screen. -->
+<GridLayout class="screen" rows="auto, *, auto">
   @if (list() === null) {
-    <main class="scroll">
+    <main row="1" class="scroll">
       <p class="muted center">This list doesn't exist or isn't shared with you.</p>
     </main>
   } @else {
-    <item-entry [exclude]="onList()" (added)="add($event)"></item-entry>
+    <item-entry row="0" [exclude]="onList()" (added)="add($event)"></item-entry>
 
-    <main class="scroll items">
+    <main row="1" class="scroll items">
       @for (invite of invites(); track invite.id) {
         <article class="banner invite">
           <span class="grow">You're invited to “{{ invite.name }}”</span>
@@ -61,7 +62,7 @@
     </main>
 
     @if (items().length) {
-      <footer class="progress">
+      <footer row="2" class="progress">
         <span class="grow">{{ done().length }} of {{ items().length }} ordered</span>
         @if (done().length) {
           <button class="btn small primary" (tap)="startNextWeek()">Start next week</button>
@@ -71,4 +72,4 @@
       </footer>
     }
   }
-</div>
+</GridLayout>

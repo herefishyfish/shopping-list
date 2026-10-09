@@ -1,6 +1,8 @@
 @use '../../../theme' as *;
 
 .login {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
   padding: 24;
   gap: 24;

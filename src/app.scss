@@ -22,11 +22,8 @@ Page {
 
 // ---------------------------------------------------------------- layout
 
-.page {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100%;
+// Page root: a core GridLayout (fills the Page; MasonKit content goes inside it).
+.screen {
   background-color: c(bg);
   color: c(text);
 }
