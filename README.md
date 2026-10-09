@@ -54,7 +54,7 @@ unticked over, and you start again. The Monday-evening reminder nudges you to pl
 | --- | --- |
 | Sign in | Google, or email + password (create account / sign in) |
 | Start (first run) | Create your household list, accept an email invite, or scan a housemate's QR code. Opens your list automatically once you have one |
-| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week** (footer pinned to the bottom). ActionBar: **Share** and **Settings** |
+| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week** (footer pinned to the bottom). ActionBar: **Lists** (switch, new list, join by QR) and **Settings**. Sharing lives in Settings, and the app always opens on the last list you used |
 | Share sheet | **By email:** invite, see members and pending invites, cancel invites, remove members (owner only). **QR code:** show a join QR, create a new code, revoke all codes |
 | Scanner (modal) | ML Kit camera scanner. Asks before joining |
 | Settings | Household list (rename, invite & QR, untick everything, switch list, join by scan, leave/delete), weekly reminder (day, time, Perth/phone time zone, test), privacy opt-out, account & sign out, version |
