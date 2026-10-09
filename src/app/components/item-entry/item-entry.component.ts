@@ -1,6 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA, computed, inject, input, output, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HistoryService } from '../../core/history.service';
+import { UiService } from '../../core/ui.service';
 import { HistoryEntry } from '../../core/models';
 import { rankSuggestions } from '../../core/suggest';
 
@@ -23,6 +24,7 @@ export interface NewItem {
 })
 export class ItemEntryComponent {
   private readonly history = inject(HistoryService);
+  private readonly ui = inject(UiService);
 
   /** Normalised names already (unticked) on the list - never suggested again. */
   readonly exclude = input<ReadonlySet<string>>(new Set());
@@ -42,6 +44,16 @@ export class ItemEntryComponent {
 
   pick(entry: HistoryEntry) {
     this.emit(entry.name, this.query().trim() ? 'suggestion' : 'buy_again');
+  }
+
+  /** Long-press a suggestion to drop it from your history (typos, one-offs). */
+  async forget(entry: HistoryEntry) {
+    if (!(await this.ui.confirm('Remove suggestion?', `\u201c${entry.name}\u201d won't be suggested any more. Adding it again later brings it back.`, 'Remove'))) return;
+    try {
+      await this.history.forget(entry);
+    } catch (e) {
+      this.ui.error('Could not remove the suggestion', e);
+    }
   }
 
   private emit(name: string, source: NewItem['source']) {

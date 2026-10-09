@@ -7,9 +7,9 @@
 
   @if (query().trim() && matches().length) {
     <div class="suggestions">
-      <span class="hint">From your previous lists</span>
+      <span class="hint">From your previous lists · hold to remove</span>
       @for (s of matches(); track s.id) {
-        <div class="suggestion" (tap)="pick(s)">
+        <div class="suggestion" (tap)="pick(s)" (longPress)="forget(s)">
           <span class="suggestion-name">{{ s.name }}</span>
           <span class="suggestion-count">{{ s.count }}×</span>
         </div>
@@ -17,10 +17,10 @@
     </div>
   } @else if (buyAgain().length) {
     <div class="buy-again">
-      <span class="hint">Buy again</span>
+      <span class="hint">Buy again · hold to remove</span>
       <div class="chips">
         @for (s of buyAgain(); track s.id) {
-          <button class="chip" (tap)="pick(s)">+ {{ s.name }}</button>
+          <button class="chip" (tap)="pick(s)" (longPress)="forget(s)">+ {{ s.name }}</button>
         }
       </div>
     </div>
