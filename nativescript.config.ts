@@ -5,15 +5,13 @@ export default {
   id: 'dev.herefishy.shoppinglist',
   appPath: 'src',
   appResourcesPath: 'App_Resources',
-  // Uncaught JS exceptions are reported (Crashlytics, see src/main.ts) instead of crashing the
-  // app. Norrix still sees them via discardedErrorEvent, so a broken OTA update rolls back.
+  // Runtime 9.1+: uncaught JS errors are logged and fire Application.uncaughtErrorEvent instead
+  // of crashing. src/main.ts reports them to Crashlytics, and Norrix listens to the same event
+  // so a broken OTA update still rolls back.
   // https://docs.nativescript.org/guide/error-handling
-  ios: {
-    discardUncaughtJsExceptions: true,
-  },
+  uncaughtErrorPolicy: 'report',
   android: {
     v8Flags: '--expose_gc',
     markingMode: 'none',
-    discardUncaughtJsExceptions: true,
   },
 } as NativeScriptConfig;

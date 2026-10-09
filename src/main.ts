@@ -51,10 +51,10 @@ Trace.setErrorHandler({
     }
   },
 });
-// Uncaught JS exceptions are discarded instead of rethrown to native
-// (`discardUncaughtJsExceptions` in nativescript.config.ts) and reported here.
-Application.on(Application.discardedErrorEvent, (args: DiscardedErrorEventData) => recordError(args.error, 'discarded'));
+// Uncaught JS errors (`uncaughtErrorPolicy: 'report'` in nativescript.config.ts) keep the app
+// running and arrive here; discardedErrorEvent only fires if a plugin opts into discarding.
 Application.on(Application.uncaughtErrorEvent, (args: UnhandledErrorEventData) => recordError(args.error, 'uncaught'));
+Application.on(Application.discardedErrorEvent, (args: DiscardedErrorEventData) => recordError(args.error, 'discarded'));
 
 runNativeScriptAngularApp({
   // Firebase init happens before the main app bootstraps; the loading app (same look as the
