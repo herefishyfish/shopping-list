@@ -1,0 +1,77 @@
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: 8;
+  padding: 12 16;
+  background-color: #ffffff;
+  border-bottom-width: 1;
+  border-color: #e3e6e4;
+}
+
+.entry-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
+.entry-name {
+  flex: 1;
+}
+
+.entry-qty {
+  width: 64;
+}
+
+.hint {
+  font-size: 12;
+  color: #8a948f;
+  text-transform: uppercase;
+  letter-spacing: 0.05;
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 2;
+}
+
+.suggestion {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10 8;
+  border-radius: 8;
+  background-color: #f3f6f4;
+}
+
+.suggestion-name {
+  font-size: 16;
+}
+
+.suggestion-count {
+  font-size: 12;
+  color: #8a948f;
+}
+
+.buy-again {
+  display: flex;
+  flex-direction: column;
+  gap: 6;
+}
+
+.chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6;
+}
+
+.chip {
+  padding: 6 12;
+  border-radius: 16;
+  font-size: 14;
+  background-color: #e3f1ea;
+  color: #1f5a41;
+}

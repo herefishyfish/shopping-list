@@ -1,0 +1,67 @@
+<ActionBar [title]="list()?.name ?? ''" class="action-bar">
+  <NavigationButton android.systemIcon="ic_menu_back" text="Lists"></NavigationButton>
+  <ActionItem text="Share" ios.position="right" android.position="actionBar" (tap)="share()"></ActionItem>
+  <ActionItem text="More" ios.position="right" android.position="actionBar" (tap)="menu()"></ActionItem>
+</ActionBar>
+
+<div class="page">
+  @if (list() === null) {
+    <main class="scroll">
+      <p class="muted center">This list doesn't exist or isn't shared with you.</p>
+    </main>
+  } @else {
+    <item-entry [exclude]="onList()" (added)="add($event)"></item-entry>
+
+    <main class="scroll items">
+      @if (list()?.archived) {
+        <p class="banner">This list is archived. Use “More” to restore it.</p>
+      }
+
+      @if (!items().length) {
+        <section class="empty">
+          <span class="empty-icon">🧺</span>
+          <p class="muted center">Nothing on the list. Start typing above – things you've bought before will pop up.</p>
+        </section>
+      }
+
+      @for (item of todo(); track item.id) {
+        <article class="item">
+          <CheckBox class="check" fillColor="#2e7d5b" tintColor="#9aa59f" [checked]="false" (checkedChange)="toggle(item, $any($event).value)"></CheckBox>
+          <div class="item-body" (tap)="toggle(item, true)">
+            <span class="item-name">{{ item.name }}</span>
+            @if (shared()) {
+              <span class="item-meta">added by {{ item.addedByName }}</span>
+            }
+          </div>
+          <span class="qty" [class.empty-qty]="!item.quantity" (tap)="editQuantity(item)">{{ item.quantity || '+ qty' }}</span>
+          <button class="icon-btn" (tap)="remove(item)">✕</button>
+        </article>
+      }
+
+      @if (done().length) {
+        <h3 class="section-title">In the trolley · {{ done().length }}</h3>
+        @for (item of done(); track item.id) {
+          <article class="item checked">
+            <CheckBox class="check" fillColor="#2e7d5b" tintColor="#9aa59f" [checked]="true" (checkedChange)="toggle(item, $any($event).value)"></CheckBox>
+            <div class="item-body" (tap)="toggle(item, false)">
+              <span class="item-name">{{ item.name }}</span>
+            </div>
+            @if (item.quantity) {
+              <span class="qty">{{ item.quantity }}</span>
+            }
+            <button class="icon-btn" (tap)="remove(item)">✕</button>
+          </article>
+        }
+      }
+    </main>
+
+    @if (items().length) {
+      <footer class="progress">
+        <span>{{ done().length }} of {{ items().length }} ticked</span>
+        @if (!shared()) {
+          <button class="btn link small" (tap)="share()">Share with someone</button>
+        }
+      </footer>
+    }
+  }
+</div>

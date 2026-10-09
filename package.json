@@ -1,0 +1,49 @@
+{
+  "name": "shopping-list",
+  "main": "src/main.ts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared shopping lists for partners and housemates — NativeScript + Angular + MasonKit + Firebase",
+  "license": "MIT",
+  "scripts": {
+    "android": "ns run android",
+    "ios": "ns run ios",
+    "build:android": "ns build android",
+    "build:ios": "ns build ios",
+    "bundle:android": "webpack --config webpack.config.js --env platform=android",
+    "bundle:ios": "webpack --config webpack.config.js --env platform=ios",
+    "typecheck": "ngc -p tsconfig.json --noEmit",
+    "test": "node --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@angular/animations": "~22.0.0",
+    "@angular/common": "~22.0.0",
+    "@angular/compiler": "~22.0.0",
+    "@angular/core": "~22.0.0",
+    "@angular/forms": "~22.0.0",
+    "@angular/platform-browser": "~22.0.0",
+    "@angular/platform-browser-dynamic": "~22.0.0",
+    "@angular/router": "~22.0.0",
+    "@nativescript-community/ui-checkbox": "^2.0.18",
+    "@nativescript-community/ui-material-bottomsheet": "^7.3.3",
+    "@nativescript-community/ui-material-snackbar": "^7.3.3",
+    "@nativescript/angular": "~22.0.0",
+    "@nativescript/core": "~9.1.0",
+    "@nativescript/firebase-auth": "^5.0.2",
+    "@nativescript/firebase-core": "^5.0.2",
+    "@nativescript/firebase-firestore": "^5.0.2",
+    "@nativescript/google-signin": "^2.1.1",
+    "@nstudio/nativescript-loading-indicator": "^5.0.0",
+    "@triniwiz/nativescript-masonkit": "1.0.0-beta.108",
+    "rxjs": "~7.8.0",
+    "zone.js": "~0.16.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "~22.0.0",
+    "@angular/compiler-cli": "~22.0.0",
+    "@nativescript/types": "~9.1.0",
+    "@nativescript/webpack": "~5.0.25",
+    "@ngtools/webpack": "~22.0.0",
+    "typescript": "~6.0.0"
+  }
+}

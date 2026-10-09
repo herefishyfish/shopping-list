@@ -1,0 +1,30 @@
+<div class="page login">
+  <header class="hero">
+    <span class="logo">🛒</span>
+    <h1>Shared Shopping</h1>
+    <p>One list for the whole house. Add things as you run out, tick them off in the shop, and see each other's changes instantly.</p>
+  </header>
+
+  <section class="card">
+    <GoogleSignInButton class="google" colorScheme="auto" colorStyle="wide" (tap)="google()"></GoogleSignInButton>
+
+    <div class="divider">
+      <span>or use email</span>
+    </div>
+
+    @if (mode() === 'register') {
+      <input type="text" placeholder="Your name" [value]="name()" (input)="name.set($event.target.value)" />
+    }
+    <input type="email" placeholder="Email" [value]="email()" (input)="email.set($event.target.value)" />
+    <input type="password" placeholder="Password" [value]="password()" (input)="password.set($event.target.value)" />
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <button class="btn primary" (tap)="submitEmail()">{{ mode() === 'register' ? 'Create account' : 'Sign in' }}</button>
+    <button class="btn link" (tap)="toggleMode()">
+      {{ mode() === 'register' ? 'Already have an account? Sign in' : 'New here? Create an account' }}
+    </button>
+  </section>
+</div>

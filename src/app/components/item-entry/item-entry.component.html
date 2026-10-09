@@ -1,0 +1,28 @@
+<section class="entry">
+  <div class="entry-row">
+    <input class="entry-name" type="text" placeholder="Add an item…" [value]="query()" (input)="query.set($event.target.value)" />
+    <input class="entry-qty" type="text" placeholder="Qty" [value]="qty()" (input)="qty.set($event.target.value)" />
+    <button class="btn primary" (tap)="submit()">Add</button>
+  </div>
+
+  @if (query().trim() && matches().length) {
+    <div class="suggestions">
+      <span class="hint">From your previous lists</span>
+      @for (s of matches(); track s.id) {
+        <div class="suggestion" (tap)="pick(s)">
+          <span class="suggestion-name">{{ s.name }}</span>
+          <span class="suggestion-count">{{ s.count }}×</span>
+        </div>
+      }
+    </div>
+  } @else if (buyAgain().length) {
+    <div class="buy-again">
+      <span class="hint">Buy again</span>
+      <div class="chips">
+        @for (s of buyAgain(); track s.id) {
+          <button class="chip" (tap)="pick(s)">+ {{ s.name }}</button>
+        }
+      </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,44 @@
+<!-- A single core layout root: the bottom-sheet service re-parents this view. -->
+<StackLayout class="sheet-root">
+  <div class="sheet">
+    <h2>Share “{{ list()?.name }}”</h2>
+    <p class="muted">
+      Invite your partner or housemates by the email they sign in with. They'll see the invitation on their lists screen, and everyone can add, tick off and remove items.
+    </p>
+
+    <div class="invite-row">
+      <input class="grow" type="email" placeholder="name@example.com" [value]="email()" (input)="email.set($event.target.value)" />
+      <button class="btn primary" (tap)="invite()">Invite</button>
+    </div>
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    <h3 class="section-title">People</h3>
+    @for (m of members(); track m.uid) {
+      <div class="person">
+        <span class="avatar">{{ initial(m.name) }}</span>
+        <div class="grow">
+          <span class="person-name">{{ m.name }}{{ m.uid === me() ? ' (you)' : '' }}</span>
+          <span class="muted small">{{ m.owner ? 'Owner · ' : '' }}{{ m.email }}</span>
+        </div>
+        @if (isOwner() && !m.owner) {
+          <button class="btn small ghost" (tap)="removeMember(m.uid, m.name)">Remove</button>
+        }
+      </div>
+    }
+
+    @if (list()?.invitedEmails?.length) {
+      <h3 class="section-title">Waiting to join</h3>
+      @for (email of list()!.invitedEmails; track email) {
+        <div class="person pending">
+          <span class="avatar">✉︎</span>
+          <span class="grow">{{ email }}</span>
+          <button class="btn small ghost" (tap)="cancelInvite(email)">Cancel</button>
+        </div>
+      }
+    }
+
+    <button class="btn ghost" (tap)="close()">Done</button>
+  </div>
+</StackLayout>

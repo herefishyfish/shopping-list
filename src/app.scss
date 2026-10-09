@@ -1,0 +1,120 @@
+// Global styles. MasonKit's HTML-shaped elements are styled by tag name, just like the web.
+// Lengths are unitless (= dip, which matches a CSS pixel in a browser).
+
+$primary: #2e7d5b;
+$primary-dark: #1f5a41;
+$bg: #f6f7f5;
+$text: #1c2420;
+$muted: #5f6b66;
+$danger: #b3261e;
+
+Page {
+  background-color: $bg;
+}
+
+.action-bar {
+  background-color: $primary;
+  color: #ffffff;
+}
+
+// ---------------------------------------------------------------- layout
+
+.page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: $bg;
+  color: $text;
+}
+
+.scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: scroll;
+  padding: 16;
+  gap: 12;
+}
+
+.grow {
+  flex: 1;
+}
+
+.center {
+  text-align: center;
+}
+
+// ---------------------------------------------------------------- typography
+
+h1 { font-size: 28; font-weight: bold; color: $text; }
+h2 { font-size: 22; font-weight: bold; color: $text; }
+h3 { font-size: 18; font-weight: bold; color: $text; }
+h4 { font-size: 16; font-weight: bold; color: $text; }
+p { font-size: 15; line-height: 1.4; color: $text; }
+
+.muted { color: $muted; font-size: 14; }
+.small { font-size: 12; }
+.error { color: $danger; font-size: 14; }
+
+.section-title {
+  font-size: 13;
+  font-weight: bold;
+  color: $muted;
+  text-transform: uppercase;
+  margin-top: 8;
+}
+
+// ---------------------------------------------------------------- surfaces
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 14 16;
+  border-radius: 14;
+  background-color: #ffffff;
+}
+
+// ---------------------------------------------------------------- controls (MasonKit <input>/<button>)
+
+input {
+  padding: 10 12;
+  font-size: 16;
+  border-width: 1;
+  border-color: #d5dbd8;
+  border-radius: 10;
+  background-color: #ffffff;
+  color: $text;
+}
+
+button,
+.btn {
+  padding: 12 16;
+  border-radius: 10;
+  font-size: 16;
+  font-weight: bold;
+  text-align: center;
+  color: $primary;
+  background-color: transparent;
+}
+
+.btn.primary {
+  color: #ffffff;
+  background-color: $primary;
+}
+
+.btn.ghost {
+  color: $primary-dark;
+  background-color: #e3f1ea;
+}
+
+.btn.link {
+  color: $primary;
+  font-weight: normal;
+  background-color: transparent;
+}
+
+.btn.small {
+  padding: 6 12;
+  font-size: 14;
+}

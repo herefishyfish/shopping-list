@@ -1,0 +1,53 @@
+.sheet-root {
+  background-color: #ffffff;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10;
+  padding: 20 16 28 16;
+}
+
+.sheet h2 {
+  font-size: 20;
+}
+
+.invite-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
+.person {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12;
+  padding: 6 0;
+}
+
+.person .grow {
+  display: flex;
+  flex-direction: column;
+}
+
+.person-name {
+  font-size: 16;
+}
+
+.avatar {
+  width: 36;
+  height: 36;
+  border-radius: 18;
+  text-align: center;
+  line-height: 36;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #2e7d5b;
+}
+
+.pending .avatar {
+  background-color: #b0b8b4;
+}

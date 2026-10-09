@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// Shared shopping lists.
+//   users/{uid}                 public profile (name/email) – readable by any signed-in user
+//   users/{uid}/history/{key}   that user's item history for the type-ahead – private
+//   lists/{listId}              memberIds can read/write; invitedEmails can read + accept/decline
+//   lists/{listId}/items/{id}   readable/writable by list members
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+
+      match /history/{entry} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    match /lists/{listId} {
+      function isMember() {
+        return request.auth.uid in resource.data.memberIds;
+      }
+
+      function isInvited() {
+        return request.auth.token.email != null && myEmail() in resource.data.invitedEmails;
+      }
+
+      // An invitee may only add themselves to memberIds/members and/or remove their own
+      // email from invitedEmails – i.e. accept or decline. Nothing else.
+      function isAcceptOrDecline() {
+        let before = resource.data;
+        let after = request.resource.data;
+        let addedMembers = after.memberIds.toSet().difference(before.memberIds.toSet());
+        let removedMembers = before.memberIds.toSet().difference(after.memberIds.toSet());
+        return after.diff(before).affectedKeys().hasOnly(['memberIds', 'members', 'invitedEmails', 'updatedAt'])
+          && !(myEmail() in after.invitedEmails)
+          && addedMembers.hasOnly([request.auth.uid])
+          && removedMembers.size() == 0
+          && after.members.diff(before.members).affectedKeys().hasOnly([request.auth.uid]);
+      }
+
+      allow read: if signedIn() && (isMember() || isInvited());
+
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.memberIds == [request.auth.uid];
+
+      // Members can edit the list (rename, archive, invite, leave …) but never change its owner,
+      // and only the owner can remove *other* people.
+      allow update: if signedIn() && (
+        (isMember()
+          && request.resource.data.ownerId == resource.data.ownerId
+          && (resource.data.ownerId == request.auth.uid
+              || resource.data.memberIds.toSet().difference(request.resource.data.memberIds.toSet()).hasOnly([request.auth.uid])))
+        || (isInvited() && isAcceptOrDecline())
+      );
+
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+
+      match /items/{itemId} {
+        function listMember() {
+          return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
+        }
+        allow read, write: if signedIn() && listMember();
+      }
+    }
+  }
+}

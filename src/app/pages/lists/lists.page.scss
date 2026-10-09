@@ -1,0 +1,75 @@
+.greeting {
+  font-size: 22;
+  margin-bottom: 4;
+}
+
+.invites {
+  display: flex;
+  flex-direction: column;
+  gap: 8;
+}
+
+.invite {
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+  border-left-width: 4;
+  border-color: #2e7d5b;
+}
+
+.new-list {
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
+.list-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 12;
+}
+
+.list-card h4 {
+  font-size: 18;
+}
+
+.list-card.archived {
+  opacity: 0.6;
+}
+
+.count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56;
+  padding: 6 10;
+  border-radius: 12;
+  background-color: #e3f1ea;
+}
+
+.count.done {
+  background-color: #eceeed;
+}
+
+.count-num {
+  font-size: 20;
+  font-weight: bold;
+  color: #2e7d5b;
+}
+
+.count-label {
+  font-size: 11;
+  color: #5f6b66;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8;
+  padding: 32 16;
+}
+
+.empty-icon {
+  font-size: 48;
+}

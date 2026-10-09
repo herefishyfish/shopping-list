@@ -1,0 +1,69 @@
+<ActionBar title="Shopping lists" class="action-bar">
+  <ActionItem text="About" android.position="popup" ios.position="right" (tap)="about()"></ActionItem>
+  <ActionItem text="Sign out" android.position="popup" ios.position="right" (tap)="signOut()"></ActionItem>
+</ActionBar>
+
+<div class="page">
+  <main class="scroll">
+    <h2 class="greeting">Hi {{ firstName() }} 👋</h2>
+
+    @if (invites().length) {
+      <section class="invites">
+        <h3 class="section-title">Invitations</h3>
+        @for (invite of invites(); track invite.id) {
+          <article class="card invite">
+            <div class="grow">
+              <h4>{{ invite.name }}</h4>
+              <span class="muted">Shared by {{ ownerName(invite) }}</span>
+            </div>
+            <button class="btn small primary" (tap)="accept(invite)">Join</button>
+            <button class="btn small ghost" (tap)="decline(invite)">Decline</button>
+          </article>
+        }
+      </section>
+    }
+
+    <section class="new-list card">
+      <input class="grow" type="text" placeholder="New list, e.g. Weekly shop" [value]="newName()" (input)="newName.set($event.target.value)" />
+      <button class="btn primary" (tap)="create()">Create</button>
+    </section>
+
+    @if (loading() && !active().length) {
+      <p class="muted center">Loading your lists…</p>
+    } @else if (!active().length) {
+      <section class="empty">
+        <span class="empty-icon">📝</span>
+        <p class="muted center">No lists yet. Create one above, then share it with your partner or housemates.</p>
+      </section>
+    }
+
+    @for (list of active(); track list.id) {
+      <article class="card list-card" (tap)="open(list)">
+        <div class="grow">
+          <h4>{{ list.name }}</h4>
+          <span class="muted">{{ sharedWith(list) }}</span>
+        </div>
+        <div class="count" [class.done]="list.itemCount > 0 && remaining(list) === 0">
+          <span class="count-num">{{ remaining(list) }}</span>
+          <span class="count-label">to buy</span>
+        </div>
+      </article>
+    }
+
+    @if (archived().length) {
+      <button class="btn link" (tap)="showArchived.set(!showArchived())">
+        {{ showArchived() ? 'Hide' : 'Show' }} archived lists ({{ archived().length }})
+      </button>
+      @if (showArchived()) {
+        @for (list of archived(); track list.id) {
+          <article class="card list-card archived" (tap)="open(list)">
+            <div class="grow">
+              <h4>{{ list.name }}</h4>
+              <span class="muted">{{ list.itemCount }} items · {{ sharedWith(list) }}</span>
+            </div>
+          </article>
+        }
+      }
+    }
+  </main>
+</div>
