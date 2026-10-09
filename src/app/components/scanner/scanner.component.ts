@@ -1,6 +1,6 @@
 import { Component, NO_ERRORS_SCHEMA, inject, signal } from '@angular/core';
 import { NativeDialogRef } from '@nativescript/angular';
-import { LoadEventData, Utils } from '@nativescript/core';
+import { EventData, Utils } from '@nativescript/core';
 import { BarcodeResult } from '@nativescript/mlkit-barcode-scanning';
 import { DetectionEvent, DetectionType, MLKitView } from '@nativescript/mlkit-core';
 import { Subject, distinctUntilChanged, take } from 'rxjs';
@@ -111,7 +111,7 @@ export class ScannerModalComponent {
     if (value) this.scannedValue$.next(value);
   }
 
-  async onLoaded(event: LoadEventData) {
+  async onLoaded(event: EventData) {
     this.camera = event.object as unknown as MLKitView;
     if (this.camera.hasCameraPermission()) return;
     try {

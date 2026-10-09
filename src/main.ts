@@ -1,3 +1,5 @@
+// Must stay the first import – see ota.ts.
+import './ota';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { bootstrapApplication, provideNativeScriptRouter, registerElement, runNativeScriptAngularApp } from '@nativescript/angular';
 import { installMasonKit } from '@triniwiz/nativescript-masonkit/angular';
@@ -10,6 +12,7 @@ import '@nativescript/mlkit-barcode-scanning';
 import { Svg } from '@nativescript/canvas-svg';
 
 import { AppComponent } from './app/app.component';
+import { LoadingComponent } from './app/loading.component';
 import { routes } from './app/app.routes';
 import { initFirebase } from './app/core/firebase';
 
@@ -35,10 +38,13 @@ registerElement('SvgView', () => Svg);
 installBottomSheet();
 
 runNativeScriptAngularApp({
+  // Firebase init happens before the main app bootstraps; the loading app (same look as the
+  // native splash) covers that gap and fades out when the main app is ready.
   appModuleBootstrap: async () => {
     await initFirebase();
     return bootstrapApplication(AppComponent, {
       providers: [provideNativeScriptRouter(routes), provideZonelessChangeDetection()],
     });
   },
+  loadingModule: () => bootstrapApplication(LoadingComponent, { providers: [provideZonelessChangeDetection()] }),
 });

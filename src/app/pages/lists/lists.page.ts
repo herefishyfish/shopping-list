@@ -8,6 +8,7 @@ import { UiService } from '../../core/ui.service';
 import { parseJoinPayload } from '../../core/qr';
 import { ScannerService } from '../../components/scanner/scanner.service';
 import { ReminderService } from '../../core/reminder.service';
+import { runningVersionLabel } from '../../../ota';
 
 @Component({
   selector: 'lists-page',
@@ -123,7 +124,7 @@ export class ListsPage {
   async about() {
     await Dialogs.alert({
       title: 'Shared Shopping',
-      message: `Signed in as ${this.user()?.email}.\n\nShare a list from its “Share” button. Items you add are remembered so you can find them again from the type-ahead.`,
+      message: `Signed in as ${this.user()?.email}.\nVersion ${runningVersionLabel()}\n\nShare a list from its “Share” button. Items you add are remembered so you can find them again from the type-ahead.`,
       okButtonText: 'OK',
     });
   }

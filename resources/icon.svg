@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 10 88 88" width="1024" height="1024">
+  <!-- Full-bleed app icon (iOS / store / legacy Android). Source of truth for the glyph: icon-glyph.svg -->
+  <rect x="10" y="10" width="88" height="88" fill="#2e7d5b"/>
+  <circle cx="54" cy="54" r="42" fill="#348a65" opacity="0.6"/>
+  <path d="M27 30h7.5l7.4 31.5a4.5 4.5 0 0 0 4.4 3.5h23.6a4.5 4.5 0 0 0 4.3-3.2L81 39H38.7" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M43.5 76a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0z" fill="#ffffff"/>
+  <path d="M66.5 76a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0 -9 0z" fill="#ffffff"/>
+  <path d="M49 51l6 6l12-12" fill="none" stroke="#ffd166" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

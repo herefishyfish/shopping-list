@@ -24,6 +24,11 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
   the phone's own), or turn it off.
 - **SVG icons:** `src/assets/icons/*.svg`, rendered with `<SvgView>` (`@nativescript/canvas-svg`)
   and coloured through CSS `color` (`currentColor`).
+- **Fast start:** a `loadingModule` (same look as the native splash) is shown while Firebase
+  initialises and the main app bootstraps, then fades out.
+- **OTA updates:** [Norrix](https://norrix.net) (`@norrix/client-sdk` 3). Updates download in
+  the background and apply on the **next launch**. A bad update is quarantined and rolled back
+  automatically.
 - **Plugins:** `@nativescript-community/ui-material-bottomsheet` (share sheet),
   `@nativescript-community/ui-material-snackbar` (undo/errors), `@nativescript-community/ui-checkbox`,
   `@nstudio/nativescript-loading-indicator` (sign-in / delete progress).
@@ -64,6 +69,11 @@ src/
       share-sheet/                material bottom sheet for sharing (email + QR tabs)
       qr-code/                    <qr-code [value]> rendered as SVG
       scanner/                    ML Kit scanner modal + ScannerService.scan()
+  ota.ts                          Norrix OTA init (first import in main.ts)
+  app/loading.component.ts        loading screen shown while the app boots
+resources/icon*.svg               app icon sources → `npm run icons`
+tools/generate-icons.mjs          renders the icon / splash PNGs for iOS and Android
+norrix.config.ts                  Norrix cloud build / OTA config
 firestore.rules                   security rules (see below)
 rules-tests/                      rules tests that run against the Firestore emulator
 tests/                            unit tests for the type-ahead logic
@@ -139,6 +149,36 @@ Both Firebase config files are git-ignored.
 ns run android
 ns run ios
 ```
+
+## App icon & splash
+
+`resources/icon-glyph.svg` (a cart with a tick, on a 108×108 adaptive-icon canvas) and
+`resources/icon.svg` (full-bleed) are the sources. `npm run icons` renders:
+
+- iOS `AppIcon.appiconset` (all sizes, opaque as App Store requires) and the launch screen images
+- Android legacy `mipmap-*/ic_launcher.png` and the splash `drawable-*/logo.png` (also used by the loading screen)
+
+The Android adaptive and themed (monochrome) icon is a vector at
+`drawable/ic_launcher_foreground.xml` that mirrors the glyph SVG. Edit both if the glyph
+changes. Android 12+ uses it for the system splash (`values-v31/styles.xml`).
+
+## OTA updates (Norrix)
+
+```bash
+npx norrix sign-in
+# once: upload the git-ignored Firebase config so cloud builds can include it
+npx norrix env set-file google-services.json App_Resources/Android/src/google-services.json
+npx norrix env set-file GoogleService-Info.plist App_Resources/iOS/GoogleService-Info.plist
+
+npm run cloud:android        # store binary – must ship once with the 3.x OTA loader
+npm run cloud:ios
+npm run ota:android          # publish JS/CSS/asset changes over the air
+npm run ota:ios
+```
+
+OTA can update anything in `src/` and `node_modules` JS. Changes to `App_Resources`
+(icons, Info.plist, manifest), native plugins or the NativeScript runtime need a new store build.
+**About** on the lists screen shows whether the store bundle or an OTA update is running.
 
 ## Checks
 
