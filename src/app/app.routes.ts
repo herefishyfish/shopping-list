@@ -15,6 +15,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/start/start.page').then((m) => m.StartPage),
   },
   {
+    path: 'list/:id/meals',
+    canActivate: [signedInGuard],
+    loadComponent: () => import('./pages/meals/meals.page').then((m) => m.MealsPage),
+  },
+  {
     path: 'list/:id',
     canActivate: [signedInGuard],
     loadComponent: () => import('./pages/list/list.page').then((m) => m.ListPage),
