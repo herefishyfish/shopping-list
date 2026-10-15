@@ -1,0 +1,190 @@
+@use '../../../theme' as *;
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 6;
+  padding: 12 16 4;
+}
+
+.hint {
+  font-size: 14;
+  color: c(text);
+}
+
+.chips {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6;
+}
+
+.chip {
+  padding: 8 12;
+  border-radius: 16;
+  font-size: 14;
+  font-weight: normal;
+  color: c(on-primary-soft);
+  background-color: c(surface-muted);
+}
+
+.chip.active {
+  color: c(on-primary);
+  background-color: c(primary-fill);
+}
+
+.deck-scroll {
+  padding-top: 8;
+}
+
+.deck {
+  height: 360;
+  margin: 0 0 8;
+}
+
+.meal-card {
+  margin: 4 16 12;
+  border-radius: 18;
+  background-color: c(surface);
+}
+
+.meal-card.behind {
+  margin: 16 28 0;
+  background-color: c(surface-muted);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16;
+  gap: 8;
+}
+
+.card-top {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
+.badge {
+  padding: 3 8;
+  border-radius: 10;
+  font-size: 12;
+  font-weight: bold;
+  color: c(on-primary-soft);
+  background-color: c(primary-soft);
+}
+
+.badge.off {
+  color: c(muted);
+  background-color: c(surface-muted);
+}
+
+.stamp {
+  font-size: 16;
+  font-weight: bold;
+  padding: 2 8;
+  border-width: 2;
+  border-radius: 8;
+}
+
+.stamp.yes {
+  color: c(primary);
+  border-color: c(primary);
+}
+
+.stamp.no {
+  color: c(danger);
+  border-color: c(danger);
+}
+
+.ings {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: scroll;
+  gap: 4;
+}
+
+.ing {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+}
+
+.voters {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6;
+}
+
+.voter {
+  padding: 3 8;
+  border-radius: 10;
+  font-size: 12;
+  color: c(muted);
+  background-color: c(surface-muted);
+}
+
+.voter.yes {
+  color: c(on-primary-soft);
+  background-color: c(primary-soft);
+}
+
+.voter.no {
+  color: c(danger);
+  background-color: c(surface-muted);
+}
+
+.empty-deck {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  padding: 24 16;
+}
+
+.result {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8;
+  padding: 10 12;
+  border-radius: 12;
+  background-color: c(surface);
+}
+
+.result .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 2;
+}
+
+.result-title {
+  font-size: 16;
+}
+
+.vote-bar {
+  display: flex;
+  flex-direction: row;
+  gap: 12;
+  padding: 10 16;
+  background-color: c(surface);
+  border-top-width: 1;
+  border-color: c(divider);
+}
+
+.vote-bar button {
+  flex: 1;
+}
+
+.btn.no {
+  color: c(danger);
+  border-width: 1;
+  border-color: c(danger);
+  background-color: transparent;
+}

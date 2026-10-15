@@ -6,6 +6,7 @@ import { ReminderService } from '../../core/reminder.service';
 import { Dialogs } from '@nativescript/core';
 import { AuthService } from '../../core/auth.service';
 import { ListsService } from '../../core/lists.service';
+import { MealsService } from '../../core/meals.service';
 import { ListItem, ShoppingList } from '../../core/models';
 import { UiService } from '../../core/ui.service';
 import { ItemEntryComponent, NewItem } from '../../components/item-entry/item-entry.component';
@@ -27,6 +28,7 @@ export class ListPage {
   private readonly router = inject(RouterExtensions);
   private readonly join = inject(JoinService);
   private readonly reminders = inject(ReminderService);
+  private readonly meals = inject(MealsService);
 
   readonly list = signal<ShoppingList | null | undefined>(undefined);
   readonly items = signal<ListItem[]>([]);
@@ -50,6 +52,7 @@ export class ListPage {
     this.reminders.ensureScheduled();
     const unsubList = this.lists.watchList(id, (list) => {
       this.list.set(list);
+      if (list) this.meals.armReminder(list);
       // Deleted, or we were removed from it (possibly while the app was closed).
       if (!list) {
         this.ui.toast('This list is no longer available');
@@ -163,6 +166,11 @@ export class ListPage {
 
   settings() {
     this.router.navigate(['/settings']);
+  }
+
+  openMeals() {
+    const id = this.list()?.id;
+    if (id) this.router.navigate(['/list', id, 'meals']);
   }
 
   private openList(id: string) {

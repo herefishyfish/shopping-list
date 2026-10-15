@@ -1,0 +1,102 @@
+<ActionBar title="Meals" class="action-bar">
+  <NavigationButton android.systemIcon="ic_menu_back" text="List"></NavigationButton>
+</ActionBar>
+
+<GridLayout class="screen" pageInsets rows="auto, *, auto">
+  <div row="0" class="head">
+    <p class="muted">{{ weekTitle }}</p>
+    <p class="hint">Swipe right for yes, left for no. When you both say yes, the ingredients go on the list.</p>
+    @if (needsPartner()) {
+      <p class="hint">Invite your partner first - a yes from both of you is what adds the ingredients.</p>
+    }
+    <div class="chips">
+      <button class="chip" [class.active]="vegOnly()" (tap)="toggleVeg()">Vegetarian only</button>
+    </div>
+    @if (hiddenCount()) {
+      <p class="muted small">{{ hiddenCount() }} hidden (not vegetarian)</p>
+    }
+    <p class="muted small">{{ countsLine() }}</p>
+  </div>
+
+  <main row="1" class="scroll deck-scroll">
+    <GridLayout class="deck">
+      @if (peek()) {
+        <GridLayout class="meal-card behind"></GridLayout>
+      }
+      @if (front(); as meal) {
+        <GridLayout class="meal-card" [translateX]="dragX()" [rotate]="tilt()" (pan)="onPan($any($event))">
+          <div class="card-body">
+            <div class="card-top">
+              <span class="badge" [class.off]="!meal.vegetarian">{{ meal.vegetarian ? 'Vegetarian' : 'Not vegetarian' }}</span>
+              @if (dragX() > 24) {
+                <span class="stamp yes">YES</span>
+              }
+              @if (dragX() < -24) {
+                <span class="stamp no">NO</span>
+              }
+            </div>
+            <h2>{{ meal.title }}</h2>
+            @if (meal.description) {
+              <p>{{ meal.description }}</p>
+            }
+            @if (cost(meal)) {
+              <p class="muted">About {{ cost(meal) }}</p>
+            }
+            <div class="ings">
+              @for (ing of meal.ingredients; track $index) {
+                <div class="ing">
+                  <span class="grow">{{ ing.name }}</span>
+                  @if (ing.quantity) {
+                    <span class="qty">{{ ing.quantity }}</span>
+                  }
+                </div>
+              }
+            </div>
+            @if (meal.notes) {
+              <p class="muted small">{{ meal.notes }}</p>
+            }
+            <div class="voters">
+              @for (line of lines(meal); track line.uid) {
+                <span class="voter" [class.yes]="line.choice === 'yes'" [class.no]="line.choice === 'no'">{{ line.name }} · {{ choiceLabel(line.choice) }}</span>
+              }
+            </div>
+          </div>
+        </GridLayout>
+      } @else {
+        <div class="empty-deck">
+          <p class="muted center">{{ emptyMessage() }}</p>
+        </div>
+      }
+    </GridLayout>
+
+    @for (group of groups(); track group.key) {
+      @if (group.meals.length) {
+        <h3 class="section-title">{{ group.label }} · {{ group.meals.length }}</h3>
+        @for (meal of group.meals; track meal.id) {
+          <article class="result">
+            <div class="grow">
+              <span class="result-title">{{ meal.title }}</span>
+              <span class="muted small">{{ summary(meal) }}</span>
+            </div>
+            @if (meal.vegetarian) {
+              <span class="badge">Veg</span>
+            }
+            @if (meal.appliedAt) {
+              <span class="muted small">On the list</span>
+            } @else {
+              <button class="btn small link" (tap)="vote(meal, 'no')">No</button>
+              <button class="btn small link" (tap)="vote(meal, 'yes')">Yes</button>
+            }
+          </article>
+        }
+      }
+    }
+  </main>
+
+  <div row="2" class="vote-bar">
+    @if (front(); as meal) {
+      <button class="btn no" (tap)="vote(meal, 'no')">No</button>
+      <button class="btn primary" (tap)="vote(meal, 'yes')">Yes</button>
+    }
+  </div>
+</GridLayout>

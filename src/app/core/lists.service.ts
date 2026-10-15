@@ -4,6 +4,7 @@ import { FieldValue } from '@nativescript/firebase-firestore';
 import { AuthService } from './auth.service';
 import { db } from './firebase';
 import { HistoryService } from './history.service';
+import { isMatch, planIngredientAdds, toMeal } from './meals';
 import { ListItem, ShoppingList } from './models';
 import { JOIN_CODE_TTL_MS, JoinPayload, buildJoinPayload } from './qr';
 import { displayName, normalizeName } from './suggest';
@@ -171,15 +172,10 @@ export class ListsService {
   /** Owner only: deletes the list and everything under it. */
   async deleteList(list: ShoppingList) {
     const listRef = db().collection('lists').doc(list.id);
-    for (const sub of ['items', 'weeks']) {
-      const docs = (await listRef.collection(sub).get()).docs;
-      // Firestore batches are capped at 500 writes.
-      for (let i = 0; i < docs.length; i += 450) {
-        const batch = db().batch();
-        docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
-        await batch.commit();
-      }
-    }
+    const plans = (await listRef.collection('mealPlans').get()).docs;
+    for (const plan of plans) await this.deleteDocs((await plan.ref.collection('meals').get()).docs);
+    await this.deleteDocs(plans);
+    for (const sub of ['items', 'weeks']) await this.deleteDocs((await listRef.collection(sub).get()).docs);
     await this.revokeJoinCodes(list);
     if (this._currentId() === list.id) this.setCurrent(null);
     await listRef.delete();
@@ -286,27 +282,75 @@ export class ListsService {
       );
   }
 
-  async addItem(list: ShoppingList, rawName: string, quantity = '', source: 'typed' | 'suggestion' | 'buy_again' = 'typed') {
+  async addItem(list: ShoppingList, rawName: string, quantity = '', source: 'typed' | 'suggestion' | 'buy_again' | 'meal' = 'typed') {
     const name = displayName(rawName);
     if (!name) return;
-    const me = this.auth.user()!;
     const listRef = db().collection('lists').doc(list.id);
     const batch = db().batch();
-    batch.set(listRef.collection('items').doc(), {
-      name,
-      nameLower: normalizeName(name),
-      quantity: quantity.trim(),
-      checked: false,
-      addedBy: me.uid,
-      addedByName: me.displayName,
-      createdAt: Date.now(),
-      checkedAt: null,
-    });
+    batch.set(listRef.collection('items').doc(), this.newItemData(name, quantity));
     batch.update(listRef, { itemCount: FieldValue.increment(1), updatedAt: Date.now() });
     await batch.commit();
     track('item_added', { source, shared: list.memberIds.length > 1 });
     // History is best-effort; never block adding the item on it.
     this.history.record(name).catch((e) => console.warn('[history] record failed', e));
+  }
+
+  /**
+   * Both members said yes. Writes the ingredients with the same item shape, counts and
+   * history as {@link addItem}, merging into an existing line when the name matches.
+   * The meal's `appliedAt` is set in the same batch, so a second phone's batch is rejected
+   * and nothing is added twice.
+   */
+  async applyAgreedMeal(list: ShoppingList, weekId: string, mealId: string): Promise<'applied' | 'skipped'> {
+    const listRef = db().collection('lists').doc(list.id);
+    const mealRef = listRef.collection('mealPlans').doc(weekId).collection('meals').doc(mealId);
+    const [mealSnap, listSnap, itemsSnap] = await Promise.all([mealRef.get(), listRef.get(), listRef.collection('items').get()]);
+    if (!mealSnap.exists || !listSnap.exists) return 'skipped';
+    const meal = toMeal(mealSnap.id, mealSnap.data());
+    if (meal.appliedAt) return 'skipped';
+    const memberIds: string[] = listSnap.data()?.memberIds ?? [];
+    if (!isMatch(meal.votes, memberIds)) return 'skipped';
+
+    const plans = planIngredientAdds(
+      itemsSnap.docs.map((d) => {
+        const data = d.data();
+        return { id: d.id, name: data?.name ?? '', nameLower: data?.nameLower ?? '', quantity: data?.quantity ?? '', checked: !!data?.checked };
+      }),
+      meal.ingredients,
+    );
+    const batch = db().batch();
+    let created = 0;
+    let reopened = 0;
+    for (const plan of plans) {
+      if (plan.action === 'create') {
+        batch.set(listRef.collection('items').doc(), this.newItemData(plan.name, plan.quantity));
+        created++;
+      } else if (plan.itemId) {
+        const patch: Record<string, unknown> = { quantity: plan.quantity };
+        if (plan.reopen) {
+          patch.checked = false;
+          patch.checkedAt = null;
+          reopened++;
+        }
+        batch.update(listRef.collection('items').doc(plan.itemId), patch);
+      }
+    }
+    const listPatch: Record<string, unknown> = { updatedAt: Date.now() };
+    if (created) listPatch.itemCount = FieldValue.increment(created);
+    if (reopened) listPatch.doneCount = FieldValue.increment(-reopened);
+    batch.update(listRef, listPatch as any);
+    batch.update(mealRef, { appliedAt: Date.now(), appliedBy: this.auth.uid });
+    try {
+      await batch.commit();
+    } catch (err) {
+      const again = await mealRef.get();
+      if (again.exists && typeof again.data()?.appliedAt === 'number') return 'skipped';
+      throw err;
+    }
+    for (const plan of plans) this.history.record(plan.name).catch((e) => console.warn('[history] record failed', e));
+    track('meal_agreed', { ingredients: plans.length, created, merged: plans.length - created });
+    for (let i = 0; i < created; i++) track('item_added', { source: 'meal', shared: memberIds.length > 1 });
+    return 'applied';
   }
 
   async setChecked(list: ShoppingList, item: ListItem, checked: boolean) {
@@ -363,6 +407,32 @@ export class ListsService {
     batch.update(listRef, { doneCount: 0, updatedAt: Date.now() });
     await batch.commit();
     return done.length;
+  }
+
+  /** Same payload `addItem` writes, so meal ingredients stay consistent with typed ones. */
+  private newItemData(name: string, quantity: string) {
+    const me = this.auth.user()!;
+    return {
+      name,
+      nameLower: normalizeName(name),
+      quantity: quantity.trim(),
+      checked: false,
+      addedBy: me.uid,
+      addedByName: me.displayName,
+      createdAt: Date.now(),
+      checkedAt: null as number | null,
+    };
+  }
+
+  /** Firestore batches are capped at 500 writes. */
+  private async deleteDocs(docs: { ref: any }[]) {
+    for (let i = 0; i < docs.length; i += 450) {
+      const slice = docs.slice(i, i + 450);
+      if (!slice.length) continue;
+      const batch = db().batch();
+      slice.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
+    }
   }
 
   private touch(id: string, data: Record<string, unknown>) {

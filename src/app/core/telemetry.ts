@@ -23,6 +23,8 @@ export type AnalyticsEvent =
   | 'list_joined'
   | 'item_added'
   | 'item_checked'
+  | 'meal_voted'
+  | 'meal_agreed'
   | 'share_invite_sent'
   | 'share_qr_shown'
   | 'join_codes_revoked'

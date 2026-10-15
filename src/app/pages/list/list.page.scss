@@ -65,11 +65,31 @@
   margin-bottom: 2;
 }
 
-.banner.invite {
+.banner.invite,
+.banner.meals {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8;
+}
+
+.banner.meals {
+  background-color: c(primary-soft);
+  color: c(on-primary-soft);
+}
+
+.banner.meals .small {
+  color: c(on-primary-soft);
+}
+
+.banner.meals .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 2;
+}
+
+.chevron {
+  font-size: 22;
 }
 
 .banner {

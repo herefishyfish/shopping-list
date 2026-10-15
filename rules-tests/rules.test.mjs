@@ -214,3 +214,116 @@ test('members can close off a week; others cannot read or forge it', async () =>
   await assertFails(getDocs(collection(as(EVE), 'lists/l1/weeks')));
   await assertSucceeds(deleteDoc(doc(as(ALICE), 'lists/l1/weeks/w1')));
 });
+
+// ---------------------------------------------------------------- meal plans
+
+const MEAL = 'lists/l1/mealPlans/2026-10-21/meals/fried-rice';
+const PLAN = 'lists/l1/mealPlans/2026-10-21';
+
+function mealDoc(votes, extra = {}) {
+  return {
+    title: 'Veggie fried rice',
+    description: 'Quick weeknight rice.',
+    ingredients: [
+      { name: 'Jasmine rice', quantity: '2 cups' },
+      { name: 'Soy sauce', quantity: '' },
+    ],
+    estCostAud: 12.5,
+    vegetarian: true,
+    source: 'assistant',
+    notes: '',
+    sort: 0,
+    votes,
+    appliedAt: null,
+    appliedBy: null,
+    ...extra,
+  };
+}
+
+async function seedMeal(votes = {}, extra = {}) {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, PLAN), { weekId: '2026-10-21', orderDay: 'wednesday', timezone: 'Australia/Perth', createdAt: 1 });
+    await setDoc(doc(db, MEAL), mealDoc(votes, extra));
+  });
+}
+
+async function pair() {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'lists/l1'), {
+      memberIds: ['alice', 'bob'],
+      'members.bob': { name: 'Bob', email: 'bob@example.com' },
+      invitedEmails: [],
+    });
+  });
+}
+
+test('members can read meal plans; invitees and strangers cannot', async () => {
+  await seedMeal();
+  await assertSucceeds(getDoc(doc(as(ALICE), PLAN)));
+  await assertSucceeds(getDocs(collection(as(ALICE), `${PLAN}/meals`)));
+  await assertFails(getDoc(doc(as(BOB), MEAL)));
+  await assertFails(getDocs(collection(as(EVE), `${PLAN}/meals`)));
+  await assertFails(getDoc(doc(env.unauthenticatedContext().firestore(), PLAN)));
+  await pair();
+  await assertSucceeds(getDoc(doc(as(BOB), MEAL)));
+});
+
+test('clients cannot create meal plans or meals, or edit the meal itself', async () => {
+  await pair();
+  await seedMeal();
+  const db = as(BOB);
+  await assertFails(setDoc(doc(db, 'lists/l1/mealPlans/other'), { weekId: 'other', createdAt: 1 }));
+  await assertFails(setDoc(doc(db, `${PLAN}/meals/new`), mealDoc({})));
+  await assertFails(updateDoc(doc(db, PLAN), { createdAt: 2 }));
+  await assertFails(updateDoc(doc(db, MEAL), { title: 'Mine' }));
+  await assertFails(updateDoc(doc(db, MEAL), { 'votes.bob': 'yes', title: 'Mine' }));
+  await assertFails(updateDoc(doc(db, MEAL), { 'votes.bob': 'maybe' }));
+});
+
+test('a member can write only their own vote', async () => {
+  await pair();
+  await seedMeal({ alice: 'yes' });
+  const db = as(BOB);
+  await assertSucceeds(updateDoc(doc(db, MEAL), { 'votes.bob': 'yes' }));
+  await assertSucceeds(updateDoc(doc(db, MEAL), { 'votes.bob': 'no' }));
+  await assertFails(updateDoc(doc(db, MEAL), { 'votes.alice': 'no' }));
+  await assertFails(updateDoc(doc(db, MEAL), { votes: { bob: 'yes' } }));
+  await assertFails(updateDoc(doc(as(EVE), MEAL), { 'votes.eve': 'yes' }));
+});
+
+test('the deciding vote can claim the meal once everyone has said yes', async () => {
+  await pair();
+  await seedMeal({ alice: 'yes', bob: 'yes' });
+  const db = as(BOB);
+  await assertSucceeds(updateDoc(doc(db, MEAL), { appliedAt: Date.now(), appliedBy: 'bob' }));
+  await assertFails(updateDoc(doc(db, MEAL), { appliedAt: Date.now(), appliedBy: 'bob' }));
+  await assertFails(updateDoc(doc(db, MEAL), { 'votes.bob': 'no' }));
+});
+
+test('a claim is refused unless every current member voted yes', async () => {
+  await pair();
+  await seedMeal({ alice: 'yes' });
+  await assertFails(updateDoc(doc(as(BOB), MEAL), { appliedAt: Date.now(), appliedBy: 'bob' }));
+  await seedMeal({ alice: 'yes', bob: 'no' });
+  await assertFails(updateDoc(doc(as(BOB), MEAL), { appliedAt: Date.now(), appliedBy: 'bob' }));
+  // A former member's "no" does not block the people still on the list.
+  await seedMeal({ alice: 'yes', bob: 'yes', eve: 'no' });
+  await assertSucceeds(updateDoc(doc(as(ALICE), MEAL), { appliedAt: Date.now(), appliedBy: 'alice' }));
+  // One person on the list is not enough.
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await updateDoc(doc(ctx.firestore(), 'lists/l1'), { memberIds: ['alice'] });
+  });
+  await seedMeal({ alice: 'yes' });
+  await assertFails(updateDoc(doc(as(ALICE), MEAL), { appliedAt: Date.now(), appliedBy: 'alice' }));
+});
+
+test('a member cannot claim the meal as someone else, and only the owner can delete it', async () => {
+  await pair();
+  await seedMeal({ alice: 'yes', bob: 'yes' });
+  await assertFails(updateDoc(doc(as(BOB), MEAL), { appliedAt: Date.now(), appliedBy: 'alice' }));
+  await assertFails(deleteDoc(doc(as(BOB), MEAL)));
+  await assertFails(deleteDoc(doc(as(BOB), PLAN)));
+  await assertSucceeds(deleteDoc(doc(as(ALICE), MEAL)));
+  await assertSucceeds(deleteDoc(doc(as(ALICE), PLAN)));
+});

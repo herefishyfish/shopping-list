@@ -22,6 +22,10 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
 - **Weekly reminder:** a local notification (`@nativescript/local-notifications`), on Mondays at
   7:00 pm Perth time (AWST) by default. You can change the day, time and time zone (Perth, or
   the phone's own), or turn it off.
+- **Meal ideas:** each order week (the coming Wednesday in Perth, or today if it is Wednesday)
+  the household swipes through meals. When every member says yes, the ingredients are merged
+  onto the shared list. Vegetarian meals are flagged and can be filtered. Ideas are written
+  from outside the app; the schema is below.
 - **SVG icons:** `src/assets/icons/*.svg`, rendered with `<SvgView>` (`@nativescript/canvas-svg`)
   and coloured through CSS `color` (`currentColor`).
 - **Dark mode:** Android follows the system theme through resources
@@ -46,15 +50,20 @@ A NativeScript + Angular app for shopping lists you share with your partner or h
 ## Features
 
 **How it's meant to be used:** the household shares **one list**. Everyone adds things
-during the week. At order time you tick items off as they go into the order. Then **Start next
-week** clears what was ordered (saving it as that week's order history), carries anything
-unticked over, and you start again. The Monday-evening reminder nudges you to place the order.
+during the week. Before the Wednesday order, open **Meals** and swipe through that week's
+ideas — right (or Yes) if you want it, left (or No) if you don't. When you have both said yes,
+the ingredients are added to the list. At order time you tick items off as they go into the
+order. Then **Start next week** clears what was ordered (saving it as that week's order history),
+carries anything unticked over, and you start again. The Monday-evening reminder nudges you to
+place the order. A separate nudge fires once when that Wednesday's meals show up, if
+notifications are already allowed.
 
 | Screen | What you can do |
 | --- | --- |
 | Sign in | Google, or email + password (create account / sign in) |
 | Start (first run) | Create your household list, accept an email invite, or scan a housemate's QR code. Opens your list automatically once you have one |
-| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week** (footer pinned to the bottom). ActionBar: **Lists** (switch, new list, join by QR) and **Settings**. Sharing lives in Settings, and the app always opens on the last list you used |
+| List (home) | Add items (optional quantity) using the type-ahead and "buy again" chips, tick off as ordered, tap a quantity to edit, remove with undo, **Start next week** (footer pinned to the bottom). ActionBar: **Meals**, **Lists** (switch, new list, join by QR) and **Settings**. Sharing lives in Settings, and the app always opens on the last list you used |
+| Meals | This Wednesday's ideas (Perth time). Swipe the card right for yes and left for no, or use the buttons. Vegetarian meals are badged and the deck can be filtered to them. Agreed, pending and rejected meals stay listed, with who has voted. A yes from every current member adds the ingredients to the list |
 | Share sheet | **By email:** invite, see members and pending invites, cancel invites, remove members (owner only). **QR code:** show a join QR, create a new code, revoke all codes |
 | Scanner (modal) | ML Kit camera scanner. Asks before joining |
 | Settings | Household list (rename, invite & QR, untick everything, switch list, join by scan, leave/delete), weekly reminder (day, time, Perth/phone time zone, test), privacy opt-out, account & sign out, version |
@@ -67,18 +76,20 @@ src/
   app.scss                        global styles - tag selectors (h1, p, input, button) + utility classes
   environments/environment.ts     Google web client ID
   app/
-    app.routes.ts                 /login, /lists, /lists/:id (with auth guards)
+    app.routes.ts                 /login, /start, /list/:id, /list/:id/meals, /settings (with auth guards)
     core/
       firebase.ts                 initialises Firebase + Google Sign-In once
       auth.service.ts             auth state as a signal, Google / email sign-in, profile upsert
       lists.service.ts            lists, sharing/invitations, items (batched writes keep counts in sync)
       history.service.ts          per-user item history that feeds the type-ahead
       suggest.ts                  pure ranking / normalisation helpers (unit-tested)
+      meals.ts                    meal week id, votes, ingredient merge (unit-tested)
+      meals.service.ts            live meal plan, votes, and the "both said yes" ingredient write
       qr.ts                       join-link payload, QR matrix → SVG (unit-tested)
       reminder-time.ts            next reminder time, AWST / device zone (unit-tested)
       reminder.service.ts         schedules the weekly local notification
       ui.service.ts               snackbar, loading indicator, dialogs
-    pages/                        login, start (first run), list (home), settings – `*-page` selectors
+    pages/                        login, start (first run), list (home), meals, settings – `*-page` selectors
     components/
       item-entry/                 add-item bar with type-ahead + "buy again" chips
       share-sheet/                material bottom sheet for sharing (email + QR tabs)
@@ -108,13 +119,19 @@ lists/{listId}/joinCodes/{code} { createdBy, createdAt, expiresAt }      ← QR 
 lists/{listId}/weeks/{weekId}   { completedAt, completedBy, completedByName, items[] } ← order history
 lists/{listId}/items/{itemId}    { name, nameLower, quantity, checked, addedBy, addedByName,
                                    createdAt, checkedAt }
+lists/{listId}/mealPlans/{weekId} { weekId, orderDay, timezone, createdAt }
+lists/{listId}/mealPlans/{weekId}/meals/{mealId}
+                                 { title, description, ingredients[{name, quantity}],
+                                   estCostAud, vegetarian, source, notes, sort,
+                                   votes{uid: "yes"|"no"}, appliedAt, appliedBy }
 ```
 
 **How sharing works:** inviting someone adds their lower-cased email to `invitedEmails`. When they
 sign in with that email, the list appears under **Invitations**. Accepting moves their uid into
 `memberIds`. The security rules only let an invitee add themselves and remove their own invite,
-so an invitation can't be used to do anything else. Members can edit everything except the
-owner. Only the owner can remove other people or delete the list.
+so an invitation can't be used to do anything else. Members can edit the list and its items, but
+not the owner, and on a meal they can write only their own vote. Only the owner can remove other
+people or delete the list.
 
 **How QR joining works:** a member creates `lists/{id}/joinCodes/{code}`, where the code is a
 Firestore auto-id (about 120 bits) that expires after 24h. The QR code encodes
@@ -122,6 +139,87 @@ Firestore auto-id (about 120 bits) that expires after 24h. The QR code encodes
 writes `joinCode: <code>`. The rules allow that only if the code exists, hasn't expired, and the
 caller is adding nobody but themselves. Strangers can't read join codes, and "Revoke all codes"
 deletes them.
+
+### Meal ideas (written outside the app)
+
+The app only **reads** meal plans and **writes votes** (plus a one-time `appliedAt` / `appliedBy`
+claim). Create the documents with the Admin SDK, which bypasses `firestore.rules`. Clients cannot
+create or edit a meal's title, ingredients or cost.
+
+**Which document:** the order week is the coming **Wednesday in Perth** (AWST, UTC+8, no daylight
+saving). If today is Wednesday in Perth, use today. The id is that date, `YYYY-MM-DD`.
+
+Example: Thursday 15 Oct 2026 in Perth → `2026-10-21`. The screen listens to that id, so a plan
+written for a different week will not show up.
+
+```
+lists/{listId}/mealPlans/{weekId}                         the plan
+lists/{listId}/mealPlans/{weekId}/meals/{mealId}          one meal
+```
+
+`mealId` is any id you choose (a slug is fine). Write the plan doc and each meal.
+
+| Field | Type | Who writes it | Required |
+| --- | --- | --- | --- |
+| `weekId` | string | admin | yes, same as the document id |
+| `orderDay` | string | admin | yes, `"wednesday"` |
+| `timezone` | string | admin | yes, `"Australia/Perth"` |
+| `createdAt` | number | admin | yes, unix millis |
+| `title` | string | admin | yes |
+| `description` | string | admin | yes, can be `""` |
+| `ingredients` | array of `{ name: string, quantity?: string }` | admin | yes, can be `[]`. `quantity` may be omitted or `""` |
+| `estCostAud` | number | admin | yes, rough cost in Australian dollars (`12` or `12.5`) |
+| `vegetarian` | boolean | admin | yes. The app badges this and can filter on it |
+| `source` | string | admin | no. Kept for your notes; the app does not show it |
+| `notes` | string | admin | no. Shown under the ingredients (fussy-eater notes, swaps) |
+| `sort` | number | admin | no. Lower comes first in the deck. Default `0`, then title |
+| `votes` | map of uid → `"yes"` \| `"no"` | admin creates `{}`, each member writes **only their own key** | yes. Must be a map, even when empty |
+| `appliedAt` | number or null | admin sets `null`. The app sets millis **once** | yes |
+| `appliedBy` | string or null | admin sets `null`. The app sets the uid that added the ingredients | yes |
+
+`votes`, `appliedAt` and `appliedBy` have to be present. A missing `votes` map is tolerated for the
+first vote, but write `{}` anyway. Do not pre-fill anyone's vote.
+
+**When ingredients are added:** every current `memberIds` entry (at least 2, at most 8) has
+`votes[uid] == "yes"`. Someone who used to be on the list and voted no does not block it. The app
+then merges ingredients into `lists/{listId}/items` with the same write as adding an item by hand
+(name, quantity, `itemCount`, history / type-ahead). The same normalised name updates the existing
+line instead of adding a duplicate: quantities with the same unit are summed (`500g` + `250g` →
+`750g`, `1 cup` + `2 cups` → `3 cups`); anything else is kept side by side (`1 bunch + 2`). A line
+that was already ticked is unticked so the extra amount is still ordered. `appliedAt` is set in
+that same batch, so the other phone's write is rejected and nothing is added twice. Votes freeze
+after that.
+
+```js
+// firebase-admin. weekId example is the Wednesday after Thu 15 Oct 2026 (Perth).
+const weekId = '2026-10-21';
+const plan = db.doc(`lists/${listId}/mealPlans/${weekId}`);
+await plan.set({
+  weekId,
+  orderDay: 'wednesday',
+  timezone: 'Australia/Perth',
+  createdAt: Date.now(),
+});
+await plan.collection('meals').doc('veggie-fried-rice').set({
+  title: 'Veggie fried rice',
+  description: 'Quick weeknight rice with frozen veg.',
+  ingredients: [
+    { name: 'Jasmine rice', quantity: '2 cups' },
+    { name: 'Frozen mixed vegetables', quantity: '500g' },
+    { name: 'Soy sauce', quantity: '' },
+  ],
+  estCostAud: 12.5,
+  vegetarian: true,
+  source: 'assistant',
+  notes: 'Leave the egg out — Caitlin is vegetarian. Fine for the toddler if the veg is soft.',
+  sort: 0,
+  votes: {},
+  appliedAt: null,
+  appliedBy: null,
+});
+```
+
+Deleting a list (owner only) also deletes its meal plans. Members cannot delete or rewrite a meal.
 
 ## Setup
 
@@ -202,7 +300,8 @@ OTA can update anything in `src/` and `node_modules` JS. Changes to `App_Resourc
 ## Checks
 
 ```bash
-npm test                 # type-ahead, QR payload/SVG and reminder-time unit tests
+npm test                 # type-ahead, QR, reminder-time, and meal match / ingredient merge
+                         # (--experimental-strip-types, so Node 22.14 can run the .ts tests too)
 npm run bundle:android   # full AOT webpack build (also: bundle:ios)
 cd rules-tests && npm install && npm test   # firestore.rules against the emulator (needs Java)
 ```

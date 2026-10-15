@@ -6,6 +6,9 @@ rules_version = '2';
 //   lists/{listId}              memberIds can read/write; invitedEmails can read + accept/decline
 //   lists/{listId}/items/{id}   readable/writable by list members
 //   lists/{listId}/weeks/{id}   order history ("Start next week") – members read/create, owner deletes
+//   lists/{listId}/mealPlans/{weekId}            this Wednesday's plan – members read, owner deletes
+//   lists/{listId}/mealPlans/{weekId}/meals/{id} meal ideas – members read, write only their own
+//                                                vote (and, once, the appliedAt claim). Owner deletes.
 //   lists/{listId}/joinCodes/{code}  short-lived codes shown as a QR code; anyone holding a
 //                                    valid code can add *themselves* to the list
 service cloud.firestore {
@@ -119,6 +122,77 @@ service cloud.firestore {
           && request.resource.data.expiresAt is int
           && request.resource.data.expiresAt <= request.time.toMillis() + 7 * 24 * 60 * 60 * 1000;
         allow update: if false;
+      }
+
+      // Meal ideas are written by an admin (the Admin SDK bypasses these rules).
+      // Members can read them. The only client write on a meal is that member's own
+      // vote, plus a one-time appliedAt/appliedBy claim once every current member
+      // (2–8 people) has voted yes. That claim is what stops two phones adding the
+      // ingredients twice; see README for the document shape.
+      match /mealPlans/{weekId} {
+        function listMember() {
+          return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
+        }
+        function listOwner() {
+          return request.auth.uid == get(/databases/$(database)/documents/lists/$(listId)).data.ownerId;
+        }
+
+        allow read: if signedIn() && listMember();
+        allow create, update: if false;
+        allow delete: if signedIn() && listOwner();
+
+        match /meals/{mealId} {
+          function listMember() {
+            return request.auth.uid in get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
+          }
+          function listOwner() {
+            return request.auth.uid == get(/databases/$(database)/documents/lists/$(listId)).data.ownerId;
+          }
+
+          // Every current member has voted yes. A missing vote is not a yes.
+          // Votes from people who have since left the list are ignored.
+          function allMembersYes(votes) {
+            let members = get(/databases/$(database)/documents/lists/$(listId)).data.memberIds;
+            let n = members.size();
+            return votes is map
+              && n >= 2
+              && n <= 8
+              && (n < 1 || votes.get(members[0], '') == 'yes')
+              && (n < 2 || votes.get(members[1], '') == 'yes')
+              && (n < 3 || votes.get(members[2], '') == 'yes')
+              && (n < 4 || votes.get(members[3], '') == 'yes')
+              && (n < 5 || votes.get(members[4], '') == 'yes')
+              && (n < 6 || votes.get(members[5], '') == 'yes')
+              && (n < 7 || votes.get(members[6], '') == 'yes')
+              && (n < 8 || votes.get(members[7], '') == 'yes');
+          }
+
+          function onlyOwnVote() {
+            let beforeVotes = resource.data.get('votes', {});
+            let after = request.resource.data;
+            return resource.data.get('appliedAt', null) == null
+              && after.diff(resource.data).affectedKeys().hasOnly(['votes'])
+              && beforeVotes is map
+              && after.votes is map
+              && after.votes.diff(beforeVotes).affectedKeys().hasOnly([request.auth.uid])
+              && after.votes[request.auth.uid] in ['yes', 'no'];
+          }
+
+          function markApplied() {
+            let after = request.resource.data;
+            return resource.data.get('appliedAt', null) == null
+              && after.diff(resource.data).affectedKeys().hasOnly(['appliedAt', 'appliedBy'])
+              && after.appliedAt is int
+              && after.appliedAt > 0
+              && after.appliedBy == request.auth.uid
+              && allMembersYes(after.votes);
+          }
+
+          allow read: if signedIn() && listMember();
+          allow create: if false;
+          allow update: if signedIn() && listMember() && (onlyOwnVote() || markApplied());
+          allow delete: if signedIn() && listOwner();
+        }
       }
     }
   }

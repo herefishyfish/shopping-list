@@ -1,4 +1,5 @@
 <ActionBar [title]="list()?.name ?? 'Shopping'" class="action-bar">
+  <ActionItem text="Meals" ios.position="right" android.position="actionBar" (tap)="openMeals()"></ActionItem>
   <ActionItem text="Lists" ios.position="right" android.position="actionBar" (tap)="openLists()"></ActionItem>
   <ActionItem text="Settings" ios.position="right" android.position="actionBar" (tap)="settings()"></ActionItem>
 </ActionBar>
@@ -22,6 +23,14 @@
       }
 
       <p class="week muted small">{{ weekLabel() }}</p>
+
+      <article class="banner meals" (tap)="openMeals()">
+        <div class="grow">
+          <span>Meal ideas</span>
+          <span class="small">Swipe yes or no together</span>
+        </div>
+        <span class="chevron">›</span>
+      </article>
 
       @if (!items().length) {
         <section class="empty">
